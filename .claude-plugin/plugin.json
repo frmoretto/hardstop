@@ -1,0 +1,26 @@
+{
+  "name": "hardstop",
+  "version": "1.0.0",
+  "description": "Pre-execution safety layer that blocks dangerous shell commands using pattern matching + LLM analysis. Fail-closed design.",
+  "author": {
+    "name": "Francesco Marinoni Moretto",
+    "email": "contact@clarity-gate.org"
+  },
+  "homepage": "https://github.com/frmoretto/hardstop",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/frmoretto/hardstop.git"
+  },
+  "license": "CC-BY-4.0",
+  "keywords": [
+    "safety",
+    "security",
+    "shell",
+    "commands",
+    "protection",
+    "guardrails",
+    "pre-execution",
+    "fail-closed"
+  ],
+  "commands": ["hs", "hardstop", "hard"]
+}
