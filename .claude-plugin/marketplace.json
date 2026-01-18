@@ -1,0 +1,62 @@
+{
+  "$schema": "https://claude.ai/schemas/plugin-manifest-v1.json",
+  "name": "hardstop",
+  "version": "1.0.0",
+  "description": "Pre-execution safety layer for AI-generated shell commands. Blocks dangerous patterns before they execute.",
+  "author": "Francesco Marinoni Moretto",
+  "license": "CC-BY-4.0",
+  "repository": "https://github.com/frmoretto/hardstop",
+  "homepage": "https://github.com/frmoretto/hardstop",
+  "keywords": [
+    "hardstop",
+    "safety",
+    "security",
+    "pre-execution",
+    "shell",
+    "bash",
+    "powershell",
+    "command-blocking",
+    "ai-safety",
+    "guardrails"
+  ],
+  "skills": [
+    {
+      "name": "hardstop",
+      "path": "skills/hardstop/SKILL.md",
+      "triggers": [
+        "hardstop",
+        "safety check",
+        "pre-execution check",
+        "is this command safe",
+        "check command safety"
+      ]
+    }
+  ],
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "command": "python hooks/pre_tool_use.py",
+        "description": "Pre-execution safety verification for shell commands"
+      }
+    ]
+  },
+  "commands": [
+    {
+      "name": "hs",
+      "aliases": ["hardstop"],
+      "description": "Control Hardstop plugin",
+      "subcommands": [
+        {"name": "on", "description": "Enable protection"},
+        {"name": "off", "description": "Disable protection"},
+        {"name": "skip", "description": "Skip next command only"},
+        {"name": "status", "description": "Show current state"},
+        {"name": "log", "description": "View audit log"}
+      ]
+    }
+  ],
+  "compatibility": {
+    "claude-code": ">=1.0.0",
+    "claude-desktop": ">=1.0.0"
+  }
+}
