@@ -216,8 +216,13 @@ SAFE_PATTERNS = [
     r"^printenv(?:\s+.*)?$",
     
     # Git read operations
-    r"^git\s+(status|log|diff|branch|show|remote|tag)(?:\s+.*)?$",
+    r"^git\s+(status|log|diff|show|remote|describe|shortlog|whatchanged|rev-parse|rev-list|cat-file|ls-tree)(?:\s+.*)?$",
     r"^git\s+ls-[^\s]+(?:\s+.*)?$",
+
+    # Git standard workflow (recoverable via reflog)
+    # Excludes: reset (--hard loses uncommitted work), clean (deletes untracked), rebase --exec (runs shell)
+    r"^git\s+(add|commit|push|pull|fetch|clone|stash|checkout|switch|restore|merge|cherry-pick|branch|tag|init|config|am|apply|bisect|blame|bundle|format-patch|gc|mv|notes|reflog|revert|rm|submodule|worktree)(?:\s+.*)?$",
+    r"^git\s+rebase(?!\s+.*--exec)(?:\s+.*)?$",  # rebase allowed, but not with --exec
     
     # Regeneratable cleanup
     r"^rm\s+(-[^\s]*\s+)*node_modules/?\s*$",
