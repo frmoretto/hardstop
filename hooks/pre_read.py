@@ -130,6 +130,14 @@ DANGEROUS_READ_PATTERNS = [
     (r"[/\\]SAM$", "Windows SAM database"),
     (r"[/\\]SYSTEM$", "Windows SYSTEM registry"),
     (r"[/\\]SECURITY$", "Windows SECURITY registry"),
+
+    # === macOS-Specific (v1.3.6) ===
+    (r"[/\\]Library[/\\]Keychains[/\\]", "macOS keychain files"),
+    (r"[/\\]com\.apple\.TCC[/\\]TCC\.db$", "macOS privacy database"),
+    (r"[/\\]Chrome[/\\].*[/\\]Login Data$", "Chrome saved passwords"),
+    (r"[/\\]Firefox[/\\].*[/\\]logins\.json$", "Firefox saved passwords"),
+    (r"[/\\]etc[/\\]authorization$", "macOS authorization database"),
+    (r"[/\\]var[/\\]db[/\\]dslocal[/\\]", "Directory services database"),
 ]
 
 # === SENSITIVE READ PATTERNS (Warn only) ===

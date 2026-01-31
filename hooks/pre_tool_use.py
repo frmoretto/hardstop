@@ -283,6 +283,58 @@ DANGEROUS_PATTERNS = [
     (r"\bTRUNCATE\s+TABLE\b", "SQL TRUNCATE TABLE"),
     (r"\bDROP\s+TABLE\b", "SQL DROP TABLE"),
     (r"\bDROP\s+DATABASE\b", "SQL DROP DATABASE"),
+
+    # ============================================================
+    # MACOS-SPECIFIC PATTERNS (v1.3.6)
+    # ============================================================
+
+    # === DISK UTILITY ===
+    (r"\bdiskutil\s+eraseDisk\b", "Erases entire macOS disk"),
+    (r"\bdiskutil\s+eraseVolume\b", "Erases macOS volume"),
+    (r"\bdiskutil\s+partitionDisk\b", "Repartitions macOS disk (data loss)"),
+    (r"\bdiskutil\s+apfs\s+deleteContainer\b", "Deletes APFS container"),
+    (r"\bdiskutil\s+secureErase\b", "Secure erases macOS disk"),
+    (r"\bdiskutil\s+zeroDisk\b", "Writes zeros to macOS disk"),
+
+    # === KEYCHAIN ACCESS ===
+    (r"\bsecurity\s+delete-keychain\b", "Deletes macOS keychain"),
+    (r"\bsecurity\s+dump-keychain\b", "Dumps macOS keychain contents"),
+    (r"\bsecurity\s+find-generic-password\s+.*-w\b", "Extracts password from macOS keychain"),
+    (r"\bsecurity\s+find-internet-password\s+.*-w\b", "Extracts internet password from keychain"),
+    (r"\bsecurity\s+export\s+.*-k\b", "Exports macOS keychain"),
+
+    # === TIME MACHINE ===
+    (r"\btmutil\s+delete\b", "Deletes Time Machine backup"),
+    (r"\btmutil\s+disable\b", "Disables Time Machine"),
+    (r"\btmutil\s+deletelocalsnapshots\b", "Deletes local Time Machine snapshots"),
+    (r"\brm\s+.*Backups\.backupdb", "Deletes Time Machine backup data"),
+
+    # === DIRECTORY SERVICES ===
+    (r"\bdscl\s+\.\s+-delete\s+/Users/", "Deletes macOS user account"),
+    (r"\bdscl\s+\.\s+-delete\s+/Groups/", "Deletes macOS group"),
+    (r"\bdscl\s+\.\s+-append\s+/Groups/admin\s+", "Adds user to admin group"),
+
+    # === SYSTEM SECURITY ===
+    (r"\bspctl\s+--master-disable\b", "Disables macOS Gatekeeper"),
+    (r"\bcsrutil\s+disable\b", "Disables System Integrity Protection"),
+    (r"\bsystemsetup\s+-setremotelogin\s+on\b", "Enables SSH/remote login"),
+    (r"\bnvram\s+boot-args", "Modifies macOS boot arguments"),
+
+    # === PRIVACY DATABASE ===
+    (r"\bsqlite3\s+.*TCC\.db", "Direct access to macOS privacy database"),
+    (r"\btccutil\s+reset\b", "Resets macOS privacy permissions"),
+
+    # === PERSISTENCE ===
+    (r"\blaunchctl\s+load\s+.*/Library/LaunchDaemons/", "Loads system daemon (persistence mechanism)"),
+    (r"\blaunchctl\s+unload\s+.*com\.apple\.", "Unloads Apple system service"),
+    (r"\bcp\s+.*\.plist\s+.*/Library/LaunchDaemons/", "Installs system daemon (persistence)"),
+    (r"\bcp\s+.*\.plist\s+.*/Library/LaunchAgents/", "Installs launch agent (persistence)"),
+    (r"\bmv\s+.*\.plist\s+.*/Library/Launch", "Moves plist to launch directory (persistence)"),
+
+    # === APPLICATION DATA ===
+    (r"\brm\s+.*~/Library/Application\\ Support/", "Deletes macOS application data"),
+    (r"\brm\s+(-[^\s]*\s+)*-r.*~/Library/Preferences/", "Recursively deletes macOS preferences"),
+    (r"\bdefaults\s+delete\s+(com\.apple\.|NSGlobalDomain)", "Deletes system preferences"),
 ]
 
 SAFE_PATTERNS = [
@@ -378,6 +430,23 @@ SAFE_PATTERNS = [
     r"^rd\s+(/s|/q|\s)+\s*dist\s*$",
     r"^rd\s+(/s|/q|\s)+\s*build\s*$",
     r"^rmdir\s+(/s|/q|\s)+\s*node_modules\s*$",
+
+    # ============================================================
+    # MACOS-SPECIFIC SAFE PATTERNS (v1.3.6)
+    # ============================================================
+
+    # macOS read-only operations
+    r"^diskutil\s+list\s*$",
+    r"^diskutil\s+info\s+.+$",
+    r"^system_profiler\s+.+$",
+    r"^sw_vers\s*$",
+    r"^defaults\s+read\s+.+$",
+    r"^security\s+find-certificate\s+.+$",
+    r"^tmutil\s+listbackups\s*$",
+    r"^tmutil\s+status\s*$",
+    r"^launchctl\s+list\s*$",
+    r"^dscl\s+\.\s+-read\s+.+$",
+    r"^spctl\s+--status\s*$",
 ]
 
 # === LLM PROMPT ===

@@ -2,6 +2,31 @@
 
 All notable changes to Hardstop will be documented in this file.
 
+## [1.3.6] - 2026-01-31
+
+### macOS Platform Coverage
+
+Adds comprehensive macOS-specific dangerous patterns and safe patterns for better platform coverage.
+
+### Added
+- **pre_tool_use.py**: 35 macOS dangerous patterns
+  - Disk utility operations (diskutil erase, partition, zeroDisk)
+  - Keychain access (security delete-keychain, dump-keychain, find-*-password -w)
+  - Time Machine manipulation (tmutil delete, disable, deletelocalsnapshots)
+  - Directory services (dscl delete user/group, append admin)
+  - System security (spctl --master-disable, csrutil disable, nvram)
+  - Privacy database (TCC.db access, tccutil reset)
+  - Persistence mechanisms (LaunchDaemons/LaunchAgents)
+- **pre_tool_use.py**: 11 macOS safe patterns (diskutil list/info, sw_vers, defaults read, etc.)
+- **pre_read.py**: 6 macOS credential path patterns (Keychains, TCC.db, Chrome/Firefox passwords, authorization, dslocal)
+- **tests/test_macos_patterns.py**: 46 new tests for macOS patterns
+
+### Technical Details
+- Pattern count: 137 → ~180 patterns
+- Test count: 167 → 213 tests
+
+---
+
 ## [1.3.5] - 2026-01-31
 
 ### Phase 1 Security Audit Fixes

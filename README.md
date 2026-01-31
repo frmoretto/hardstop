@@ -4,7 +4,7 @@
 
 Hardstop is a defense-in-depth safety layer that catches dangerous commands and credential file reads before they execute: even when soft guardrails fail.
 
-![Version](https://img.shields.io/badge/version-1.3.5-green) ![License](https://img.shields.io/badge/license-CC_BY_4.0-blue) ![Platform](https://img.shields.io/badge/platform-macOS_%7C_Linux_%7C_Windows-lightgrey)
+![Version](https://img.shields.io/badge/version-1.3.6-green) ![License](https://img.shields.io/badge/license-CC_BY_4.0-blue) ![Platform](https://img.shields.io/badge/platform-macOS_%7C_Linux_%7C_Windows-lightgrey)
 
 [Installation](#-installation) • [How It Works](#%EF%B8%8F-how-it-works) • [Commands](#%EF%B8%8F-controls) • [Report Issue](https://github.com/frmoretto/hardstop/issues)
 
@@ -18,6 +18,7 @@ You trust your AI, but you shouldn't trust it with `rm -rf /` or reading your `~
 - **🧠 LLM Analysis:** Semantic analysis for edge cases and obfuscated attacks
 - **⛓️ Chain Awareness:** Scans every link in a command chain (`&&`, `|`, `;`)
 - **🔐 Secrets Protection:** Blocks reading of credential files (`.ssh`, `.aws`, `.env`) *(v1.3)*
+- **🍎 macOS Coverage:** Keychain, diskutil, Time Machine, Gatekeeper, SIP, LaunchDaemons *(v1.3.6)*
 - **📚 LLM Guidance:** Teaches Claude how to think about safety, not just blocks
 
 ---
@@ -37,7 +38,7 @@ $ Read ~/.aws/credentials
 
 # You check the status
 $ /hs status
-Hardstop v1.3.5
+Hardstop v1.3.6
   Status:      🟢 Enabled
   Fail mode:   Fail-closed
 
