@@ -9,9 +9,11 @@ All notable changes to Hardstop will be documented in this file.
 Addresses security audit requirements for "Safe to Install" rating.
 
 ### Added
+- **AUDIT.md**: Comprehensive security audit guide for independent reviewers
 - **README.md**: "Verify Before You Trust" section with GitIngest link and audit prompt
 - **README.md**: "Known Limitations" section documenting pattern-based detection limits
 - **README.md**: SKILL.md RAG integration warning
+- **README.md**: Link to AUDIT.md for professional auditors
 - **SECURITY.md**: LLM Analysis Layer documentation (prompt, parsing, fail-closed behavior)
 - **SECURITY.md**: Updated supported versions table
 

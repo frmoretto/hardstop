@@ -54,14 +54,18 @@ hardstop/
 ├── .github/skills/hardstop/      # GitHub Copilot (agentskills.io format)
 │   └── SKILL.md
 ├── hooks/                        # Plugin hooks
-│   └── pre_tool_use.py           # PreToolUse hook for command blocking
+│   ├── pre_tool_use.py           # PreToolUse hook for command blocking
+│   └── pre_read.py               # PreToolUse hook for read blocking
 ├── commands/                     # CLI command handlers
 │   └── hs_cmd.py                 # /hs command implementation
 ├── .claude-plugin/               # Claude Code marketplace
 │   └── marketplace.json
 ├── install.ps1                   # Windows installer
 ├── install.sh                    # Unix installer
-└── AGENTS.md                     # This file
+├── AGENTS.md                     # This file
+├── AUDIT.md                      # Security audit guide for reviewers
+├── SECURITY.md                   # Security policy and design
+└── README.md                     # User documentation
 ```
 
 ## Platform-Specific Locations
@@ -117,6 +121,22 @@ If the safety check fails for any reason:
 - Parse error → BLOCK
 
 This ensures safety check failures don't silently allow dangerous commands.
+
+## Security Verification
+
+For agents performing security assessments of this plugin:
+
+| Document | Purpose |
+|----------|---------|
+| `AUDIT.md` | Step-by-step audit guide with grep commands and test cases |
+| `SECURITY.md` | Security policy, LLM layer documentation, known limitations |
+| `README.md#verify-before-you-trust` | GitIngest link and audit prompt |
+
+**Key verification points:**
+- No network calls except local `claude` CLI
+- All state files in `~/.hardstop/` only
+- `FAIL_CLOSED = True` in both hook files
+- Skip mechanism bounded to max 10 operations
 
 ## For Plugin Users (Claude Code)
 

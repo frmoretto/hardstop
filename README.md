@@ -290,6 +290,15 @@ CODE TO ANALYZE:
 
 This prompt includes safeguards against prompt injection attacks that might be hidden in code you're reviewing.
 
+### Detailed Audit Guide
+
+For professional security auditors, see [`AUDIT.md`](AUDIT.md) which includes:
+- Critical code paths with line numbers
+- Test commands to verify claims
+- File-by-file audit checklist
+- Data flow diagrams
+- Automation scripts for common checks
+
 ---
 
 ## 🤝 Community & Feedback
