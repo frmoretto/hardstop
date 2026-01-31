@@ -1,9 +1,12 @@
 #!/usr/bin/env python3
 """
-Integration tests for Hardstop Read Hook v1.3.0
+Integration tests for Hardstop Read Hook v1.3.x
 
 Tests the Read tool protection: credential detection, path normalization,
 pattern matching, and skip mechanism.
+
+Note: As of v1.3.1, blocked reads return exit code 0 with JSON output
+containing permissionDecision: "deny" (instead of exit code 2).
 
 Run: python -m pytest tests/test_read_hook.py -v
 Or:  python tests/test_read_hook.py
@@ -281,7 +284,12 @@ class TestNonMatchingFiles(TestCase):
 
 
 class TestSkipMechanism(TestCase):
-    """Test the skip_next one-time bypass."""
+    """Test the skip_next bypass mechanism.
+
+    Note: As of v1.3.2, is_skip_enabled() is a read-only check.
+    The skip file is consumed by the hook main() during command execution,
+    not by the is_skip_enabled() check itself (multi-skip support).
+    """
 
     def setUp(self):
         # Ensure clean state
@@ -301,25 +309,46 @@ class TestSkipMechanism(TestCase):
         SKIP_FILE.touch()
         self.assertTrue(is_skip_enabled())
 
-    def test_skip_file_consumed_after_check(self):
+    def test_is_skip_enabled_is_read_only(self):
+        """is_skip_enabled() should NOT consume the file (v1.3.2+ behavior)."""
         STATE_DIR.mkdir(parents=True, exist_ok=True)
         SKIP_FILE.touch()
-        is_skip_enabled()  # Should consume the file
-        self.assertFalse(SKIP_FILE.exists())
+        is_skip_enabled()  # Read-only check
+        # File should still exist (consumption happens in hook main())
+        self.assertTrue(SKIP_FILE.exists())
 
-    def test_skip_only_works_once(self):
+    def test_skip_persists_across_checks(self):
+        """Multiple is_skip_enabled() calls should return True."""
         STATE_DIR.mkdir(parents=True, exist_ok=True)
         SKIP_FILE.touch()
-        self.assertTrue(is_skip_enabled())  # First call consumes it
-        self.assertFalse(is_skip_enabled())  # Second call returns False
+        self.assertTrue(is_skip_enabled())
+        self.assertTrue(is_skip_enabled())  # Still True (read-only)
 
 
 class TestIntegration(TestCase):
-    """Integration tests running the actual hook script."""
+    """Integration tests running the actual hook script.
+
+    Note: As of v1.3.1, the hook uses JSON output with permissionDecision
+    instead of exit codes to signal blocking.
+    """
 
     @classmethod
     def setUpClass(cls):
         cls.hook_script = Path(__file__).parent.parent / "hooks" / "pre_read.py"
+
+    def parse_hook_response(self, stdout: str) -> dict:
+        """Parse hook JSON response and extract decision info."""
+        try:
+            response = json.loads(stdout)
+            hook_output = response.get("hookSpecificOutput", {})
+            decision = hook_output.get("permissionDecision", "")
+            reason = hook_output.get("permissionDecisionReason", "")
+            return {
+                "blocked": decision == "deny",
+                "reason": reason
+            }
+        except (json.JSONDecodeError, TypeError):
+            return {"blocked": False, "reason": ""}
 
     def run_hook(self, file_path: str, cwd: str = "/project") -> Tuple[int, str, str]:
         """Run the hook script and return (exit_code, stdout, stderr)."""
@@ -340,34 +369,48 @@ class TestIntegration(TestCase):
 
     def test_blocks_ssh_key(self):
         exit_code, stdout, stderr = self.run_hook("~/.ssh/id_rsa")
-        self.assertEqual(exit_code, 2)
-        self.assertIn("BLOCKED", stderr)
+        self.assertEqual(exit_code, 0)
+        result = self.parse_hook_response(stdout)
+        self.assertTrue(result["blocked"], f"SSH key should be blocked. stdout: {stdout}")
+        self.assertIn("BLOCKED", result["reason"])
 
     def test_blocks_aws_credentials(self):
         exit_code, stdout, stderr = self.run_hook("~/.aws/credentials")
-        self.assertEqual(exit_code, 2)
-        self.assertIn("BLOCKED", stderr)
+        self.assertEqual(exit_code, 0)
+        result = self.parse_hook_response(stdout)
+        self.assertTrue(result["blocked"], f"AWS credentials should be blocked. stdout: {stdout}")
+        self.assertIn("BLOCKED", result["reason"])
 
     def test_blocks_env_file(self):
         exit_code, stdout, stderr = self.run_hook(".env")
-        self.assertEqual(exit_code, 2)
-        self.assertIn("BLOCKED", stderr)
+        self.assertEqual(exit_code, 0)
+        result = self.parse_hook_response(stdout)
+        self.assertTrue(result["blocked"], f".env should be blocked. stdout: {stdout}")
+        self.assertIn("BLOCKED", result["reason"])
 
     def test_allows_python_file(self):
         exit_code, stdout, stderr = self.run_hook("main.py")
         self.assertEqual(exit_code, 0)
+        result = self.parse_hook_response(stdout)
+        self.assertFalse(result["blocked"], "Python file should be allowed")
 
     def test_allows_readme(self):
         exit_code, stdout, stderr = self.run_hook("README.md")
         self.assertEqual(exit_code, 0)
+        result = self.parse_hook_response(stdout)
+        self.assertFalse(result["blocked"], "README should be allowed")
 
     def test_allows_package_json(self):
         exit_code, stdout, stderr = self.run_hook("package.json")
         self.assertEqual(exit_code, 0)
+        result = self.parse_hook_response(stdout)
+        self.assertFalse(result["blocked"], "package.json should be allowed")
 
     def test_allows_env_example(self):
         exit_code, stdout, stderr = self.run_hook(".env.example")
         self.assertEqual(exit_code, 0)
+        result = self.parse_hook_response(stdout)
+        self.assertFalse(result["blocked"], ".env.example should be allowed")
 
 
 class TestPatternCounts(TestCase):

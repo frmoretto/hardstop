@@ -1,9 +1,13 @@
 #!/usr/bin/env python3
 """
-Integration tests for Hardstop Plugin v1.0.0
+Integration tests for Hardstop Plugin v1.3.x
 
-Tests the actual hook behavior: stdin parsing, exit codes, state management,
+Tests the actual hook behavior: stdin parsing, JSON output, state management,
 logging, and error handling.
+
+Note: As of v1.3.1, blocked commands return exit code 0 with JSON output
+containing permissionDecision: "deny" (instead of exit code 2). This ensures
+consistent behavior between CLI and VS Code extension.
 
 Run: python -m pytest tests/ -v
 Or:  python tests/test_hook.py
@@ -463,7 +467,32 @@ class TestLogging(TestCase):
 
 
 class TestHookIntegration(TestCase):
-    """Test the hook as a subprocess with real stdin/stdout."""
+    """Test the hook as a subprocess with real stdin/stdout.
+
+    Note: As of v1.3.1, the hook uses JSON output with permissionDecision
+    instead of exit codes to signal blocking. This allows the VS Code
+    extension to handle blocks without restarting the chat.
+    """
+
+    def parse_hook_response(self, stdout: str) -> dict:
+        """Parse hook JSON response and extract decision info.
+
+        Returns dict with:
+            - blocked: True if command was blocked
+            - reason: The reason string (if blocked)
+        """
+        try:
+            response = json.loads(stdout)
+            hook_output = response.get("hookSpecificOutput", {})
+            decision = hook_output.get("permissionDecision", "")
+            reason = hook_output.get("permissionDecisionReason", "")
+            return {
+                "blocked": decision == "deny",
+                "reason": reason
+            }
+        except (json.JSONDecodeError, TypeError):
+            # No JSON output = not blocked (allowed)
+            return {"blocked": False, "reason": ""}
 
     def get_hook_path(self):
         return Path(__file__).parent.parent / "hooks" / "pre_tool_use.py"
@@ -510,32 +539,44 @@ class TestHookIntegration(TestCase):
         finally:
             shutil.rmtree(temp_dir, ignore_errors=True)
 
-    def test_safe_command_exits_0(self):
-        returncode, _, _ = self.run_hook("ls -la")
+    def test_safe_command_allowed(self):
+        returncode, stdout, _ = self.run_hook("ls -la")
         self.assertEqual(returncode, 0)
+        # Safe commands should NOT have a deny decision
+        result = self.parse_hook_response(stdout)
+        self.assertFalse(result["blocked"], "Safe command should not be blocked")
 
-    def test_dangerous_command_exits_2(self):
+    def test_dangerous_command_blocked(self):
+        """Test that dangerous commands are blocked via JSON output."""
         returncode, stdout, stderr = self.run_hook("rm -rf ~/")
-        # Should be blocked by pattern matching (Layer 1)
-        # Exit 2 = blocked, Exit 0 = allowed
-        if returncode != 2:
-            print(f"DEBUG: stdout={stdout}, stderr={stderr}")
-        self.assertEqual(returncode, 2, f"Expected exit 2 (blocked), got {returncode}. stderr: {stderr}")
-        self.assertIn("BLOCKED", stderr)
+        # v1.3.1+: Exit code is always 0, blocking is via JSON
+        self.assertEqual(returncode, 0, f"Hook should exit 0. stderr: {stderr}")
 
-    def test_chained_dangerous_exits_2(self):
+        result = self.parse_hook_response(stdout)
+        self.assertTrue(result["blocked"], f"Command should be blocked. stdout: {stdout}")
+        self.assertIn("BLOCKED", result["reason"])
+
+    def test_chained_dangerous_blocked(self):
+        """Test that chained dangerous commands are blocked via JSON output."""
         returncode, stdout, stderr = self.run_hook("ls && rm -rf /")
-        if returncode != 2:
-            print(f"DEBUG: stdout={stdout}, stderr={stderr}")
-        self.assertEqual(returncode, 2, f"Expected exit 2 (blocked), got {returncode}. stderr: {stderr}")
-        self.assertIn("BLOCKED", stderr)
+        self.assertEqual(returncode, 0, f"Hook should exit 0. stderr: {stderr}")
 
-    def test_empty_command_exits_0(self):
-        returncode, _, _ = self.run_hook("")
+        result = self.parse_hook_response(stdout)
+        self.assertTrue(result["blocked"], f"Chained dangerous command should be blocked. stdout: {stdout}")
+        self.assertIn("BLOCKED", result["reason"])
+
+    def test_empty_command_allowed(self):
+        returncode, stdout, _ = self.run_hook("")
         self.assertEqual(returncode, 0)
+        result = self.parse_hook_response(stdout)
+        self.assertFalse(result["blocked"])
 
     def test_invalid_json_fails_closed(self):
-        """Test that invalid JSON input blocks (fail-closed)."""
+        """Test that invalid JSON input blocks (fail-closed).
+
+        Note: This is the one case where exit code 2 is still used, because
+        we can't produce valid JSON output if we can't parse the input.
+        """
         hook_path = self.get_hook_path()
         temp_dir = tempfile.mkdtemp()
         env = os.environ.copy()
@@ -551,8 +592,9 @@ class TestHookIntegration(TestCase):
                 timeout=5,
                 env=env
             )
-            # Fail-closed means exit 2 on parse error
+            # Fail-closed: exit 2 on parse error (can't output JSON if input is invalid)
             self.assertEqual(result.returncode, 2)
+            self.assertIn("BLOCKED", result.stderr)
         finally:
             shutil.rmtree(temp_dir, ignore_errors=True)
 
@@ -609,7 +651,8 @@ class TestSlashCommand(TestCase):
     def test_skip(self):
         self.run_cmd("skip")
         _, stdout, _ = self.run_cmd("status")
-        self.assertIn("Yes", stdout)  # Skip next: Yes
+        # v1.3.2+: multi-skip shows "N command(s)" instead of "Yes"
+        self.assertIn("1 command", stdout)  # Skip next: 1 command
 
     def test_unknown_command(self):
         _, stdout, _ = self.run_cmd("unknown")

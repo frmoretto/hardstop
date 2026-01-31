@@ -1,8 +1,8 @@
 {
   "$schema": "https://claude.ai/schemas/plugin-manifest-v1.json",
   "name": "hardstop",
-  "version": "1.0.0",
-  "description": "Pre-execution safety layer for AI-generated shell commands. Blocks dangerous patterns before they execute.",
+  "version": "1.3.3",
+  "description": "Pre-execution safety layer that blocks dangerous shell commands and credential file reads using pattern matching + LLM analysis. Fail-closed design.",
   "author": "Francesco Marinoni Moretto",
   "license": "CC-BY-4.0",
   "repository": "https://github.com/frmoretto/hardstop",
@@ -38,6 +38,16 @@
         "matcher": "Bash",
         "command": "python hooks/pre_tool_use.py",
         "description": "Pre-execution safety verification for shell commands"
+      },
+      {
+        "matcher": "PowerShell",
+        "command": "python hooks/pre_tool_use.py",
+        "description": "Pre-execution safety verification for PowerShell commands"
+      },
+      {
+        "matcher": "Read",
+        "command": "python hooks/pre_read.py",
+        "description": "Pre-read credential file protection"
       }
     ]
   },
@@ -49,7 +59,7 @@
       "subcommands": [
         {"name": "on", "description": "Enable protection"},
         {"name": "off", "description": "Disable protection"},
-        {"name": "skip", "description": "Skip next command only"},
+        {"name": "skip", "description": "Skip next N commands (default 1)"},
         {"name": "status", "description": "Show current state"},
         {"name": "log", "description": "View audit log"}
       ]

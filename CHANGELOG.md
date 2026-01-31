@@ -2,6 +2,24 @@
 
 All notable changes to Hardstop will be documented in this file.
 
+## [1.3.3] - 2026-01-31
+
+### Fixed: Test Suite & Marketplace Sync
+
+Synchronized test suite with v1.3.1 JSON output changes and updated marketplace.json.
+
+### Changed
+- **marketplace.json**: Updated version 1.0.0 → 1.3.2, added Read and PowerShell hooks
+- **test_hook.py**: Tests now use JSON parsing instead of exit code 2 assertions
+- **test_read_hook.py**: Tests updated for JSON output and read-only skip checks
+
+### Technical Details
+- Tests now check `permissionDecision: "deny"` in JSON instead of exit code 2
+- `is_skip_enabled()` is now read-only (multi-skip compatibility)
+- Test count: 158 tests, all passing
+
+---
+
 ## [1.3.2] - 2026-01-21
 
 ### New Feature: Multi-Skip
