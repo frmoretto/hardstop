@@ -33,6 +33,11 @@
   "peerDependencies": {
     "@openclaw/sdk": "^2.0.0"
   },
+  "peerDependenciesMeta": {
+    "@openclaw/sdk": {
+      "optional": true
+    }
+  },
   "devDependencies": {
     "@types/jest": "^29.5.0",
     "@types/node": "^20.0.0",

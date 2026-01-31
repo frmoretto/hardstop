@@ -77,7 +77,7 @@ describe("Dangerous Patterns", () => {
     test("blocks keychain dump", () => {
       const result = checkDangerousPatterns("security dump-keychain");
       expect(result).not.toBeNull();
-      expect(result?.id).toBe("MACOS_KEYCHAIN_DUMP");
+      expect(result?.id).toBe("MACOS_SECURITY_DUMP_KEYCHAIN");
     });
 
     test("blocks diskutil erase", () => {
@@ -104,7 +104,8 @@ describe("Dangerous Patterns", () => {
     });
 
     test("blocks encoded PowerShell", () => {
-      const result = checkDangerousPatterns("powershell -enc SGVsbG8gV29ybGQ=");
+      // Pattern requires 20+ chars of base64, use longer payload
+      const result = checkDangerousPatterns("powershell -e SGVsbG8gV29ybGQhIFRoaXMgaXMgYSB0ZXN0");
       expect(result).not.toBeNull();
     });
 
