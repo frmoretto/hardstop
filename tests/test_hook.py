@@ -314,16 +314,65 @@ class TestChainedCommandAnalysis(TestCase):
         self.assertIn("chained", msg.lower())
 
     def test_all_safe_chain(self):
-        # Chains never get the safe fast-path now
-        self.assertFalse(is_all_safe("ls && pwd"))
+        # v1.3.4: Chains where ALL parts match safe patterns get fast-path
+        self.assertTrue(is_all_safe("ls && pwd"))
+
+    def test_cd_and_git_safe(self):
+        # v1.3.4: cd && git push should be safe (both match safe patterns)
+        self.assertTrue(is_all_safe("cd /tmp && git push"))
+        self.assertTrue(is_all_safe("cd .. && git status"))
 
     def test_mixed_chain_not_all_safe(self):
-        # Even if first is safe, unknown second makes it not all-safe
+        # If any part doesn't match safe patterns, not all-safe
         self.assertFalse(is_all_safe("ls && some-unknown"))
+        self.assertFalse(is_all_safe("cd /tmp && unknown-cmd"))
 
     def test_piped_dangerous(self):
         is_dangerous, _ = check_all_commands("echo test | rm -rf /")
         self.assertTrue(is_dangerous)
+
+    def test_piped_safe(self):
+        # v1.3.4: Piped safe commands also get fast-path
+        self.assertTrue(is_all_safe("cat file | grep foo"))
+
+
+class TestCdPattern(TestCase):
+    """Test cd safe pattern with command substitution blocking."""
+
+    def test_cd_simple(self):
+        self.assertTrue(check_safe("cd"))
+        self.assertTrue(check_safe("cd /tmp"))
+        self.assertTrue(check_safe("cd .."))
+        self.assertTrue(check_safe("cd ~"))
+
+    def test_cd_quoted_path(self):
+        self.assertTrue(check_safe('cd "My Documents"'))
+        self.assertTrue(check_safe("cd 'path with spaces'"))
+
+    def test_cd_command_substitution_blocked(self):
+        # cd with $() should NOT match safe pattern
+        self.assertFalse(check_safe("cd $(pwd)"))
+        self.assertFalse(check_safe("cd $(rm -rf /)"))
+
+    def test_cd_backtick_blocked(self):
+        # cd with backticks should NOT match safe pattern
+        self.assertFalse(check_safe("cd `pwd`"))
+        self.assertFalse(check_safe("cd `whoami`"))
+
+    def test_cd_command_substitution_dangerous(self):
+        # cd with command substitution should be detected as dangerous
+        is_dangerous, _ = check_dangerous("cd $(rm -rf /)")
+        self.assertTrue(is_dangerous)
+
+    def test_cd_backtick_dangerous(self):
+        is_dangerous, _ = check_dangerous("cd `rm -rf /`")
+        self.assertTrue(is_dangerous)
+
+    def test_cd_chain_with_later_subst_not_dangerous(self):
+        # $( in git commit message should NOT trigger cd pattern
+        # Pattern should stop at && boundary
+        is_dangerous, _ = check_dangerous('cd /tmp && git commit -m "$(cat file)"')
+        self.assertFalse(is_dangerous)
 
 
 class TestStateManagement(TestCase):

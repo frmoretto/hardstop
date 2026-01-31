@@ -2,6 +2,28 @@
 
 All notable changes to Hardstop will be documented in this file.
 
+## [1.3.4] - 2026-01-31
+
+### Fixed: Chained Command Handling
+
+Safe chained commands like `cd /tmp && git push` now fast-path through pattern matching instead of going to LLM analysis (which could incorrectly block them).
+
+### Changed
+- **is_all_safe()**: Now splits chained commands and checks each part individually
+- **cd pattern**: Added to safe patterns with command substitution blocking
+- **LLM prompt**: Improved to explicitly allow git, npm, docker and other dev tools
+
+### Security
+- Defense-in-depth: Added dangerous pattern for `cd` with command substitution
+- `cd $(cmd)` and `cd \`cmd\`` are blocked by both safe pattern exclusion AND dangerous pattern detection
+
+### Technical Details
+- `cd "path" && git push` → fast-path ALLOW (both parts match safe patterns)
+- `cd $(rm -rf /) && git push` → BLOCK (dangerous pattern catches command substitution)
+- Test count: 166 tests, all passing
+
+---
+
 ## [1.3.3] - 2026-01-31
 
 ### Fixed: Test Suite & Marketplace Sync

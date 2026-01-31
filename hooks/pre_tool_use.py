@@ -183,6 +183,11 @@ DANGEROUS_PATTERNS = [
     (r"powershell.*-ExecutionPolicy\s+Bypass", "Bypasses PowerShell execution policy"),
     (r"powershell.*-ep\s+bypass", "Bypasses PowerShell execution policy"),
 
+    # === COMMAND SUBSTITUTION IN ARGUMENTS ===
+    # Defense in depth: catch command substitution hiding dangerous commands
+    # Use [^;&|]* to stop at chain operators (prevents matching across && boundaries)
+    (r"\bcd\s+[^;&|]*(\$\(|`)", "cd with command substitution (potential code execution)"),
+
     # ============================================================
     # SHELL WRAPPER PATTERNS (detecting hidden dangerous commands)
     # ============================================================
@@ -291,6 +296,10 @@ SAFE_PATTERNS = [
 
     # Read-only operations
     r"^ls(?:\s+.*)?$",
+    # cd with path - blocks command substitution $() and backticks
+    # Allows: cd, cd /path, cd "path", cd 'path', cd ~/dir, cd ..
+    # Blocks: cd $(cmd), cd `cmd`, cd ${var}$(cmd)
+    r"^cd(?:\s+(?:\"[^`$()]*\"|'[^']*'|[^\s`$()]+))?$",
     r"^cat\s+.+$",
     r"^head\s+.+$",
     r"^tail\s+.+$",
@@ -373,24 +382,31 @@ SAFE_PATTERNS = [
 
 # === LLM PROMPT ===
 
-LLM_PROMPT = '''You are a security analyzer. Assess if this bash command is safe to execute.
+LLM_PROMPT = '''You are a security analyzer for a development environment. Assess command safety.
 
 RESPOND WITH JSON ONLY — no markdown, no prose:
 {{"verdict": "ALLOW" | "BLOCK", "reason": "one line explanation"}}
 
-BLOCK if:
-- Deletes important user data (not regeneratable caches)
-- Accesses credentials (.ssh, .aws, API keys)
-- Sends data to external servers
-- Modifies system configuration
-- Could crash or damage the system
-- Seems unrelated to legitimate development tasks
+BLOCK if the command:
+- Deletes user data (not regeneratable caches like node_modules, dist, build)
+- Reads/exfiltrates credentials (.ssh keys, .aws, .env, API keys)
+- Sends sensitive data externally (curl -d with credentials, scp ~/.ssh)
+- Overwrites disk devices (dd of=/dev/*, format C:)
+- Disables security (firewall off, antivirus disabled)
+- Executes encoded payloads (base64 -d | sh, powershell -e)
+- Creates persistence (cron jobs, registry Run keys, startup scripts)
 
-ALLOW if:
-- Read-only operations
-- Standard development commands
-- Deletes only regeneratable files (node_modules, __pycache__)
-- Clearly scoped to project directory
+ALLOW if the command:
+- Git operations (push, pull, commit, fetch, clone, branch, tag, merge, rebase)
+- Package managers (npm, pip, cargo, yarn, go, gem, composer)
+- Build/test tools (make, pytest, jest, cargo build, tsc, webpack)
+- Directory navigation (cd to any path)
+- File operations in project directories
+- Docker/container operations
+- Read-only system queries (ls, cat, grep, find, ps, env)
+
+IMPORTANT: This is a development assistant. Standard development workflows should be
+ALLOWED unless they match a specific BLOCK criterion. Prefer ALLOW for recognized dev tools.
 
 Command: {command}
 Working directory: {cwd}
@@ -640,19 +656,23 @@ def is_all_safe(command: str) -> bool:
     """
     Check if ALL parts of a chained command are safe.
     Returns True only if every part matches a safe pattern.
+
+    v1.3.4: Now splits chained commands and checks each part individually.
+    This allows safe chains like "cd /tmp && git push" to fast-path.
     """
-    # Brutal safety tradeoff: chained/piped commands never get the fast-path.
-    # Reason: our parser is intentionally simplified; if someone is chaining,
-    # it's worth paying the LLM check rather than risk a parsing edge case.
     stripped = command.strip()
     if not stripped:
         return True
 
-    # Any obvious chaining operator disables fast-path.
-    if re.search(r"&&|\|\||[;|]", stripped):
-        return False
+    # Split into parts and check each one
+    parts = split_chained_commands(stripped)
 
-    return check_safe(stripped)
+    # All parts must match a safe pattern
+    for part in parts:
+        if not check_safe(part):
+            return False
+
+    return True
 
 
 # === LLM ANALYSIS ===
