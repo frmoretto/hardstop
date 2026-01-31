@@ -2,6 +2,28 @@
 
 All notable changes to Hardstop will be documented in this file.
 
+## [1.3.5] - 2026-01-31
+
+### Phase 1 Security Audit Fixes
+
+Addresses security audit requirements for "Safe to Install" rating.
+
+### Added
+- **README.md**: "Verify Before You Trust" section with GitIngest link and audit prompt
+- **README.md**: "Known Limitations" section documenting pattern-based detection limits
+- **README.md**: SKILL.md RAG integration warning
+- **SECURITY.md**: LLM Analysis Layer documentation (prompt, parsing, fail-closed behavior)
+- **SECURITY.md**: Updated supported versions table
+
+### Changed
+- **`/hs off`**: Now shows "Credential file protection (Read hook) remains active"
+- **`/hs skip`**: Max reduced from 100 → 10 (hardened security)
+
+### Technical Details
+- Test count: 167 tests, all passing
+
+---
+
 ## [1.3.4] - 2026-01-31
 
 ### Fixed: Chained Command Handling

@@ -86,7 +86,8 @@ def cmd_off():
     save_state(state)
     print("⚠️  Hardstop disabled")
     print("   Dangerous commands will NOT be blocked.")
-    print("   Use '/hs on' to re-enable.")
+    print("   Note: Credential file protection (Read hook) remains active.")
+    print("   Use '/hs on' to re-enable, or '/hs skip' to bypass read protection.")
 
 
 def cmd_skip(count: int = 1):
@@ -94,8 +95,8 @@ def cmd_skip(count: int = 1):
     if count < 1:
         print("❌ Skip count must be at least 1")
         return
-    if count > 100:
-        print("❌ Skip count cannot exceed 100 (safety limit)")
+    if count > 10:
+        print("❌ Skip count cannot exceed 10 (safety limit)")
         return
 
     try:
