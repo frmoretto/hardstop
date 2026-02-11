@@ -78,6 +78,30 @@ graph TD
     E --> I[Execute];
 ```
 
+The 428 detection patterns (Layer 1) are published as a standalone npm package: [`hardstop-patterns`](https://www.npmjs.com/package/hardstop-patterns) — usable in any Node.js tool, not just Hardstop.
+
+---
+
+## 🤝 Works Well With
+
+**[PatchPilot](https://patchpilot.dev/)** - Package vulnerability scanner that blocks risky npm/pip/brew installations.
+
+| Tool | Focus | What It Protects |
+|------|-------|------------------|
+| **Hardstop** | Command execution safety | Blocks dangerous commands (`rm -rf /`, credential theft) |
+| **PatchPilot** | Package installation security | Blocks packages with known CVEs |
+
+**Use both for complete Claude Code security:**
+```bash
+# Install PatchPilot (package vulnerability scanning)
+npx patchpilot-cli install
+
+# Install Hardstop (command execution safety)
+git clone https://github.com/frmoretto/hardstop && cd hardstop && ./install.sh
+```
+
+**Why both?** PatchPilot secures your dependencies, Hardstop secures your execution layer. No overlap—they're complementary.
+
 ---
 
 ## 📦 Installation
@@ -292,6 +316,8 @@ CODE TO ANALYZE:
 This prompt includes safeguards against prompt injection attacks that might be hidden in code you're reviewing.
 
 ### Detailed Audit Guide
+
+**Auditing the pattern library separately?** The detection patterns are published as [`hardstop-patterns`](https://www.npmjs.com/package/hardstop-patterns) on npm ([source on GitHub](https://github.com/frmoretto/hardstop-patterns)) — same audit approach applies, with its own tailored audit prompt.
 
 For professional security auditors, see [`AUDIT.md`](AUDIT.md) which includes:
 - Critical code paths with line numbers

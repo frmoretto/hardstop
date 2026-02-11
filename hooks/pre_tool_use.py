@@ -82,6 +82,18 @@ DANGEROUS_PATTERNS = [
     # Generic: piping sensitive files to network tools
     (r"cat\s+~/\.(ssh|aws|gnupg)/.*\|\s*nc\s+", "Pipes credentials via netcat"),
 
+    # === CREDENTIAL FILE READS (standalone, no pipe required) ===
+    (r"cat\s+.*\.ssh/(id_rsa|id_ed25519|id_ecdsa|id_dsa)", "Reads SSH private key"),
+    (r"cat\s+.*\.aws/credentials", "Reads AWS credentials"),
+    (r"cat\s+.*\.kube/config", "Reads Kubernetes credentials"),
+    (r"cat\s+.*\.docker/config\.json", "Reads Docker registry auth"),
+    (r"cat\s+.*\.npmrc", "Reads npm credentials"),
+    (r"cat\s+.*/etc/shadow", "Reads system password hashes"),
+    (r"cat\s+.*\.netrc", "Reads plaintext HTTP credentials"),
+    (r"cat\s+.*\.gnupg/", "Reads GPG private data"),
+    (r"cat\s+.*\.git-credentials", "Reads Git credentials"),
+    (r"cat\s+.*\.env(\s|$)", "Reads environment secrets"),
+
     # === DISK DESTRUCTION ===
     (r"dd\s+.*of=/dev/(sd[a-z]|nvme|xvd|vd[a-z])", "Overwrites disk directly"),
     # Fixed: match partition numbers like /dev/sda1
@@ -352,7 +364,8 @@ SAFE_PATTERNS = [
     # Allows: cd, cd /path, cd "path", cd 'path', cd ~/dir, cd ..
     # Blocks: cd $(cmd), cd `cmd`, cd ${var}$(cmd)
     r"^cd(?:\s+(?:\"[^`$()]*\"|'[^']*'|[^\s`$()]+))?$",
-    r"^cat\s+.+$",
+    # cat: allow reading files, but NOT credential paths (those are caught by DANGEROUS first)
+    r"^cat\s+(?!.*(\.ssh/id_|\.aws/credentials|\.kube/config|\.docker/config\.json|\.npmrc|\.netrc|\.gnupg/|\.git-credentials|/etc/shadow|\.env$|\.env\s)).+$",
     r"^head\s+.+$",
     r"^tail\s+.+$",
     r"^less\s+.+$",
