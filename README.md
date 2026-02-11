@@ -4,7 +4,12 @@
 
 Hardstop is a defense-in-depth safety layer that catches dangerous commands and credential file reads before they execute: even when soft guardrails fail.
 
-![Version](https://img.shields.io/badge/version-1.3.6-green) ![License](https://img.shields.io/badge/license-CC_BY_4.0-blue) ![Platform](https://img.shields.io/badge/platform-macOS_%7C_Linux_%7C_Windows-lightgrey)
+[![Tests](https://github.com/frmoretto/hardstop/workflows/Tests/badge.svg)](https://github.com/frmoretto/hardstop/actions/workflows/test.yml)
+[![codecov](https://codecov.io/gh/frmoretto/hardstop/branch/main/graph/badge.svg)](https://codecov.io/gh/frmoretto/hardstop)
+[![Version](https://img.shields.io/github/v/release/frmoretto/hardstop)](https://github.com/frmoretto/hardstop/releases)
+[![License](https://img.shields.io/badge/license-CC--BY--4.0-blue.svg)](LICENSE)
+[![Python](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
+[![Platform](https://img.shields.io/badge/platform-macOS_%7C_Linux_%7C_Windows-lightgrey)](https://github.com/frmoretto/hardstop)
 
 [Installation](#-installation) • [How It Works](#%EF%B8%8F-how-it-works) • [Commands](#%EF%B8%8F-controls) • [Report Issue](https://github.com/frmoretto/hardstop/issues)
 

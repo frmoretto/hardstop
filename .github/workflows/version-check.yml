@@ -1,0 +1,26 @@
+name: Version Check
+
+on:
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  version-sync:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Check version consistency
+      run: |
+        PLUGIN_VERSION=$(grep -oP '"version":\s*"\K[^"]+' .claude-plugin/plugin.json)
+        MARKET_VERSION=$(grep -oP '"version":\s*"\K[^"]+' .claude-plugin/marketplace.json)
+
+        echo "plugin.json version: $PLUGIN_VERSION"
+        echo "marketplace.json version: $MARKET_VERSION"
+
+        if [ "$PLUGIN_VERSION" != "$MARKET_VERSION" ]; then
+          echo "Error: Version mismatch!"
+          exit 1
+        fi
+
+        echo "✅ Versions are synchronized"
