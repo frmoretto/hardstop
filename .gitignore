@@ -7,6 +7,8 @@ venv/
 
 # Testing
 .pytest_cache/
+.coverage
+htmlcov/
 
 # IDE
 .vscode/
@@ -16,6 +18,23 @@ venv/
 .DS_Store
 Thumbs.db
 nul
+
+# Node
+node_modules/
+*.tgz
+
+# Build artifacts
+dist/
+build/
+packages/
+
+# Docs (separate from repo)
+docs/
+
+# Migration scripts (dev only)
+migrate_*.py
+test_hooks_with_loader.py
+test_pattern_loader.py
 
 # Hardstop state (user-specific)
 # These are in ~/.hardstop/, not repo, but just in case

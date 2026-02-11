@@ -2,6 +2,31 @@
 
 All notable changes to Hardstop will be documented in this file.
 
+## [1.4.0] - 2026-02-11
+
+### Installation & Naming Standardization
+
+Major update to streamline installation and standardize naming conventions.
+
+### Changed
+- **BREAKING**: Plugin and skill directories now use `hs` instead of `hardstop`
+  - Plugin: `~/.claude/plugins/hs/` (was `~/.claude/plugins/hardstop/`)
+  - Skill: `~/.claude/skills/hs/` (was `~/.claude/skills/hardstop/`)
+  - Slash command remains `/hs` (unchanged)
+- **bin/install.js**: Now handles complete installation (plugin + skill + hooks)
+  - Previously only installed plugin files
+  - Now also creates skill at `~/.claude/skills/hs/SKILL.md`
+  - Now also configures hooks in `~/.claude/settings.json`
+- **package.json**: Added `skills/` to npm package files
+- All repository skill directories renamed: `.claude/skills/hs/`, `.codex/skills/hs/`, `.github/skills/hs/`, `skills/hs/`
+
+### Migration
+- Users upgrading from 1.3.x should uninstall first: `powershell .\uninstall.ps1` or `bash uninstall.sh`
+- Then reinstall: `npx hardstop install`
+- Or use the installer scripts: `powershell .\install.ps1` or `bash install.sh`
+
+---
+
 ## [1.3.6] - 2026-01-31
 
 ### macOS Platform Coverage

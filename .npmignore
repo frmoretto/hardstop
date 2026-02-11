@@ -1,0 +1,43 @@
+# Test files
+tests/
+*.pyc
+__pycache__
+**/__pycache__
+hooks/__pycache__
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Development files
+.git/
+.github/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Documentation (already in README.md)
+docs/
+
+# Build artifacts
+*.egg-info/
+dist/
+build/
+
+# Scripts
+migrate_*.py
+test_*.py
+install.sh
+install.ps1
+uninstall.sh
+uninstall.ps1
+
+# Environment
+.env
+.env.*
+venv/
+env/
+
+# OS files
+.DS_Store
+Thumbs.db

@@ -4,9 +4,9 @@
 
 Hardstop is a defense-in-depth safety layer that catches dangerous commands and credential file reads before they execute: even when soft guardrails fail.
 
+[![npm version](https://img.shields.io/npm/v/hardstop.svg)](https://www.npmjs.com/package/hardstop)
 [![Tests](https://github.com/frmoretto/hardstop/workflows/Tests/badge.svg)](https://github.com/frmoretto/hardstop/actions/workflows/test.yml)
 [![codecov](https://codecov.io/gh/frmoretto/hardstop/branch/main/graph/badge.svg)](https://codecov.io/gh/frmoretto/hardstop)
-[![Version](https://img.shields.io/github/v/release/frmoretto/hardstop)](https://github.com/frmoretto/hardstop/releases)
 [![License](https://img.shields.io/badge/license-CC--BY--4.0-blue.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
 [![Platform](https://img.shields.io/badge/platform-macOS_%7C_Linux_%7C_Windows-lightgrey)](https://github.com/frmoretto/hardstop)
@@ -43,9 +43,10 @@ $ Read ~/.aws/credentials
 
 # You check the status
 $ /hs status
-Hardstop v1.3.6
+Hardstop v1.4.0
   Status:      🟢 Enabled
-  Fail mode:   Fail-closed
+  Session Risk: Moderate (35/100)
+  Blocked: 2 commands this session
 
 # One-time bypass for a command you trust
 $ /hs skip
@@ -102,7 +103,7 @@ The 428 detection patterns (Layer 1) are published as a standalone npm package: 
 npx patchpilot-cli install
 
 # Install Hardstop (command execution safety)
-git clone https://github.com/frmoretto/hardstop && cd hardstop && ./install.sh
+npx hardstop install
 ```
 
 **Why both?** PatchPilot secures your dependencies, Hardstop secures your execution layer. No overlap—they're complementary.
@@ -111,26 +112,49 @@ git clone https://github.com/frmoretto/hardstop && cd hardstop && ./install.sh
 
 ## 📦 Installation
 
-### macOS / Linux
+### Option 1: npm (Recommended)
 
+Install with a single command:
+
+```bash
+npx hardstop install
+```
+
+Or install globally:
+
+```bash
+npm install -g hardstop
+hardstop install
+```
+
+### Option 2: Manual Installation
+
+**macOS / Linux:**
 ```bash
 git clone https://github.com/frmoretto/hardstop.git && cd hardstop && ./install.sh
 ```
 
-### Windows
-
+**Windows:**
 ```powershell
 git clone https://github.com/frmoretto/hardstop.git
 cd hardstop
 powershell -ExecutionPolicy Bypass -File install.ps1
 ```
 
-### Verify
+### Verify Installation
 
 **Restart Claude Code / Desktop / Cowork**, then:
 
 ```
 /hs status
+```
+
+You should see:
+```
+Hardstop v1.4.0
+  Status:      🟢 Enabled
+  Session Risk: Low (0/100)
+  262 patterns loaded (MITRE ATT&CK mapped)
 ```
 
 ### Uninstall
@@ -238,7 +262,7 @@ View recent entries with `/hs log`.
 
 For Claude.ai Projects or Claude Desktop without hook support, use the **SKILL.md** file directly:
 
-1. Copy [`skills/hardstop/SKILL.md`](skills/hardstop/SKILL.md) to your Project's knowledge base
+1. Copy [`skills/hs/SKILL.md`](skills/hs/SKILL.md) to your Project's knowledge base
 2. The skill provides LLM-level safety awareness (soft guardrails, no deterministic blocking)
 
 This is useful for platforms that don't support hooks but can load custom instructions.

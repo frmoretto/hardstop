@@ -17,17 +17,17 @@
 
 ### 1. Load the Skill
 
-The main skill file is at: `skills/hardstop/SKILL.md`
+The main skill file is at: `skills/hs/SKILL.md`
 
 ```
-Read: skills/hardstop/SKILL.md
+Read: skills/hs/SKILL.md
 ```
 
 ### 2. Understand the Components
 
 | Component | Purpose | Location |
 |-----------|---------|----------|
-| Safety Skill | Pre-execution checklist for LLMs | `skills/hardstop/SKILL.md` |
+| Safety Skill | Pre-execution checklist for LLMs | `skills/hs/SKILL.md` |
 | Bash Hook | Deterministic command blocking | `hooks/pre_tool_use.py` |
 | Read Hook | Credential file read blocking | `hooks/pre_read.py` |
 | CLI Commands | Plugin control (`/hs on`, `/hs status`) | `commands/hs_cmd.py` |
@@ -45,13 +45,13 @@ Use any of these to activate Hardstop awareness:
 
 ```
 hardstop/
-├── skills/hardstop/              # Canonical skill (agentskills.io compliant)
+├── skills/hs/              # Canonical skill (agentskills.io compliant)
 │   └── SKILL.md                  # v1.0 skill definition
-├── .claude/skills/hardstop/      # Claude.ai format (minimal frontmatter)
+├── .claude/skills/hs/      # Claude.ai format (minimal frontmatter)
 │   └── SKILL.md
-├── .codex/skills/hardstop/       # OpenAI Codex (agentskills.io format)
+├── .codex/skills/hs/       # OpenAI Codex (agentskills.io format)
 │   └── SKILL.md
-├── .github/skills/hardstop/      # GitHub Copilot (agentskills.io format)
+├── .github/skills/hs/      # GitHub Copilot (agentskills.io format)
 │   └── SKILL.md
 ├── hooks/                        # Plugin hooks
 │   ├── pre_tool_use.py           # PreToolUse hook for command blocking
@@ -72,10 +72,10 @@ hardstop/
 
 | Platform | Skill Location | Format |
 |----------|----------------|--------|
-| Claude Desktop/Code | `.claude/skills/hardstop/` | Minimal (`name`, `description` only) |
-| OpenAI Codex | `.codex/skills/hardstop/` | agentskills.io (full) |
-| GitHub Copilot | `.github/skills/hardstop/` | agentskills.io (full) |
-| Universal (canonical) | `skills/hardstop/` | agentskills.io (full) |
+| Claude Desktop/Code | `.claude/skills/hs/` | Minimal (`name`, `description` only) |
+| OpenAI Codex | `.codex/skills/hs/` | agentskills.io (full) |
+| GitHub Copilot | `.github/skills/hs/` | agentskills.io (full) |
+| Universal (canonical) | `skills/hs/` | agentskills.io (full) |
 
 ## Key Concepts
 
@@ -158,7 +158,7 @@ Then restart Claude Code and verify with `/hs status`.
 
 ## For Skill Users (Claude.ai/Desktop)
 
-Copy `skills/hardstop/SKILL.md` (or `.claude/skills/hardstop/SKILL.md`) to your Project's knowledge base.
+Copy `skills/hs/SKILL.md` (or `.claude/skills/hs/SKILL.md`) to your Project's knowledge base.
 
 ## Related Projects
 

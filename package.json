@@ -1,0 +1,52 @@
+{
+  "name": "hardstop",
+  "version": "1.4.0",
+  "description": "Pre-execution safety layer for Claude Code - blocks dangerous commands before they run",
+  "keywords": [
+    "claude-code",
+    "plugin",
+    "safety",
+    "security",
+    "command-safety",
+    "shell-protection",
+    "ai-safety",
+    "mitre-attack",
+    "risk-scoring"
+  ],
+  "author": {
+    "name": "Francesco Marinoni Moretto",
+    "email": "contact@clarity-gate.org"
+  },
+  "license": "CC-BY-4.0",
+  "homepage": "https://github.com/frmoretto/hardstop",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/frmoretto/hardstop.git"
+  },
+  "bugs": {
+    "url": "https://github.com/frmoretto/hardstop/issues"
+  },
+  "bin": {
+    "hardstop": "./bin/install.js"
+  },
+  "files": [
+    ".claude-plugin/",
+    "hooks/",
+    "commands/",
+    "patterns/",
+    "bin/",
+    "skills/",
+    "LICENSE",
+    "README.md",
+    "CHANGELOG.md"
+  ],
+  "engines": {
+    "node": ">=16.7.0"
+  },
+  "scripts": {
+    "test": "echo \"Use pytest for testing: cd hardstop && pytest tests/\"",
+    "postinstall": "echo \"Run 'npx hardstop install' to install the plugin\""
+  },
+  "dependencies": {},
+  "devDependencies": {}
+}

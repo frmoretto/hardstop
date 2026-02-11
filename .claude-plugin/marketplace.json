@@ -21,8 +21,8 @@
   ],
   "skills": [
     {
-      "name": "hardstop",
-      "path": "skills/hardstop/SKILL.md",
+      "name": "hs",
+      "path": "skills/hs/SKILL.md",
       "triggers": [
         "hardstop",
         "safety check",
