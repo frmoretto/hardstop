@@ -1,0 +1,1081 @@
+patterns:
+- id: DELETES_HOME_DIRECTORY
+  regex: (?<!echo\s)(?<!echo ')(?<!echo \")rm\s+(-[^\s]*\s+)*(/home/|~/)
+  message: Deletes home directory
+  severity: critical
+  category: filesystem
+  mitre_attack: T1485
+- id: DELETES_HOME_DIRECTORY_SUBDIRECTORY
+  regex: (?<!echo\s)(?<!echo ')(?<!echo \")rm\s+(-[^\s]*\s+)*~(/[^/\s]+)?(\s|$|>|;|&|\|)
+  message: Deletes home directory or subdirectory
+  severity: critical
+  category: filesystem
+  mitre_attack: T1485
+- id: DELETES_ROOT_FILESYSTEM
+  regex: (?<!echo\s)(?<!echo ')(?<!echo \")rm\s+(-[^\s]*\s+)*/(\s|$|>|;|&|\|)
+  message: Deletes root filesystem
+  severity: critical
+  category: system
+  mitre_attack: T1059.004
+- id: DELETES_HOME_DIRECTORY_VIA_HOME
+  regex: (?<!echo\s)rm\s+(-[^\s]*\s+)*\$HOME
+  message: Deletes home directory via $HOME
+  severity: critical
+  category: filesystem
+  mitre_attack: T1485
+- id: DELETES_HOME_DIRECTORY_VIA_HOME_2
+  regex: (?<!echo\s)rm\s+(-[^\s]*\s+)*\$\{HOME\}
+  message: Deletes home directory via ${HOME}
+  severity: critical
+  category: filesystem
+  mitre_attack: T1485
+- id: DELETES_USER_HOME_VIA_USER
+  regex: (?<!echo\s)rm\s+(-[^\s]*\s+)*/home/\$USER
+  message: Deletes user home via $USER
+  severity: critical
+  category: filesystem
+  mitre_attack: T1485
+- id: DELETES_USER_HOME_VIA_USER_2
+  regex: (?<!echo\s)rm\s+(-[^\s]*\s+)*/home/\$\{USER\}
+  message: Deletes user home via ${USER}
+  severity: critical
+  category: filesystem
+  mitre_attack: T1485
+- id: FORK_BOMB_WILL_CRASH_SYSTEM
+  regex: ':\(\)\s*\{\s*:\|:&\s*\}\s*;\s*:'
+  message: Fork bomb — will crash system
+  severity: critical
+  category: process
+  mitre_attack: T1496
+- id: REVERSE_SHELL_REMOTE_ACCESS_BACKDOOR
+  regex: bash\s+-i\s+>&\s*/dev/tcp/
+  message: Reverse shell — remote access backdoor
+  severity: high
+  category: network
+  mitre_attack: T1071
+- id: REVERSE_SHELL_VIA_NETCAT
+  regex: nc\s+(-[^\s]*\s+)*-e\s+/bin/(ba)?sh
+  message: Reverse shell via netcat
+  severity: high
+  category: network
+  mitre_attack: T1071
+- id: NETWORK_CONNECTION_VIA_DEV_TCP
+  regex: /dev/tcp/[^\s]+
+  message: Network connection via /dev/tcp
+  severity: high
+  category: network
+  mitre_attack: T1071
+- id: REVERSE_SHELL_VIA_NAMED_PIPE
+  regex: mkfifo.*nc.*sh
+  message: Reverse shell via named pipe
+  severity: high
+  category: network
+  mitre_attack: T1071
+- id: PYTHON_REVERSE_SHELL
+  regex: python.*socket.*connect.*exec
+  message: Python reverse shell
+  severity: high
+  category: network
+  mitre_attack: T1071
+- id: PERL_REVERSE_SHELL
+  regex: perl.*socket.*exec
+  message: Perl reverse shell
+  severity: high
+  category: network
+  mitre_attack: T1071
+- id: EXFILTRATES_CREDENTIALS
+  regex: curl\s+.*(-d|--data|-F|--form)\s+.*(\.ssh|\.aws|\.config|\.gnupg)
+  message: Exfiltrates credentials
+  severity: high
+  category: credential
+  mitre_attack: T1020
+- id: EXFILTRATES_CREDENTIALS_2
+  regex: wget\s+.*--post-(data|file)\s+.*(\.ssh|\.aws|\.config)
+  message: Exfiltrates credentials
+  severity: high
+  category: credential
+  mitre_attack: T1020
+- id: PIPES_CREDENTIALS_ANOTHER_COMMAND
+  regex: cat\s+.*(\.ssh/id_|\.aws/credentials|\.env)\s*\|
+  message: Pipes credentials to another command
+  severity: high
+  category: credential
+  mitre_attack: T1020
+- id: ARCHIVES_AND_EXFILTRATES_CREDENTIALS
+  regex: tar\s+.*\s+(\.ssh|\.aws|\.gnupg|\.config).*\|.*(nc|curl|wget)
+  message: Archives and exfiltrates credentials
+  severity: high
+  category: credential
+  mitre_attack: T1020
+- id: COPIES_CREDENTIALS_REMOTE_HOST
+  regex: scp\s+.*(\.ssh|\.aws|\.config).*@
+  message: Copies credentials to remote host
+  severity: high
+  category: credential
+  mitre_attack: T1020
+- id: PIPES_CREDENTIALS_VIA_NETCAT
+  regex: cat\s+~/\.(ssh|aws|gnupg)/.*\|\s*nc\s+
+  message: Pipes credentials via netcat
+  severity: high
+  category: credential
+  mitre_attack: T1020
+- id: READS_SSH_PRIVATE_KEY
+  regex: cat\s+.*\.ssh/(id_rsa|id_ed25519|id_ecdsa|id_dsa)
+  message: Reads SSH private key
+  severity: critical
+  category: credential
+  mitre_attack: T1552.004
+- id: READS_AWS_CREDENTIALS
+  regex: cat\s+.*\.aws/credentials
+  message: Reads AWS credentials
+  severity: high
+  category: credential
+  mitre_attack: T1552.005
+- id: READS_KUBERNETES_CREDENTIALS
+  regex: cat\s+.*\.kube/config
+  message: Reads Kubernetes credentials
+  severity: high
+  category: credential
+  mitre_attack: T1552.001
+- id: READS_DOCKER_REGISTRY_AUTH
+  regex: cat\s+.*\.docker/config\.json
+  message: Reads Docker registry auth
+  severity: medium
+  category: credential
+  mitre_attack: T1552.001
+- id: READS_NPM_CREDENTIALS
+  regex: cat\s+.*\.npmrc
+  message: Reads npm credentials
+  severity: high
+  category: credential
+  mitre_attack: T1552.001
+- id: READS_SYSTEM_PASSWORD_HASHES
+  regex: cat\s+.*/etc/shadow
+  message: Reads system password hashes
+  severity: critical
+  category: credential
+  mitre_attack: T1552.001
+- id: READS_PLAINTEXT_HTTP_CREDENTIALS
+  regex: cat\s+.*\.netrc
+  message: Reads plaintext HTTP credentials
+  severity: high
+  category: credential
+  mitre_attack: T1552.001
+- id: READS_GPG_PRIVATE_DATA
+  regex: cat\s+.*\.gnupg/
+  message: Reads GPG private data
+  severity: high
+  category: filesystem
+  mitre_attack: T1070.004
+- id: READS_GIT_CREDENTIALS
+  regex: cat\s+.*\.git-credentials
+  message: Reads Git credentials
+  severity: high
+  category: credential
+  mitre_attack: T1552.001
+- id: READS_ENVIRONMENT_SECRETS
+  regex: cat\s+.*\.env(\s|$)
+  message: Reads environment secrets
+  severity: high
+  category: credential
+  mitre_attack: T1552.001
+- id: OVERWRITES_DISK_DIRECTLY
+  regex: dd\s+.*of=/dev/(sd[a-z]|nvme|xvd|vd[a-z])
+  message: Overwrites disk directly
+  severity: critical
+  category: filesystem
+  mitre_attack: T1070.004
+- id: FORMATS_DRIVE
+  regex: mkfs(\.[a-z0-9]+)?\s+.*/dev/(sd[a-z]|nvme|xvd|vd[a-z])
+  message: Formats drive
+  severity: critical
+  category: filesystem
+  mitre_attack: T1485
+- id: REDIRECTS_RAW_DISK
+  regex: '>\s*/dev/(sd[a-z]|nvme)'
+  message: Redirects to raw disk
+  severity: high
+  category: filesystem
+  mitre_attack: T1070.004
+- id: SHREDS_DISK_HOME_DIRECTORY
+  regex: shred\s+.*(/dev/|/home/|~/)
+  message: Shreds disk or home directory
+  severity: high
+  category: filesystem
+  mitre_attack: T1070.004
+- id: EXECUTES_ENCODED_PAYLOAD
+  regex: base64\s+-d.*\|\s*(ba)?sh
+  message: Executes base64-encoded payload
+  severity: high
+  category: filesystem
+  mitre_attack: T1070.004
+- id: EXECUTES_ENCODED_PAYLOAD_2
+  regex: echo\s+[A-Za-z0-9+/=]+\s*\|\s*base64\s+-d\s*\|\s*(ba)?sh
+  message: Executes encoded payload
+  severity: high
+  category: filesystem
+  mitre_attack: T1070.004
+- id: EVAL_WITH_DECODE
+  regex: eval\s+.*\$\(.*base64
+  message: Eval with base64 decode
+  severity: high
+  category: filesystem
+  mitre_attack: T1070.004
+- id: PYTHON_ENCODED_EXECUTION
+  regex: python.*-c.*exec.*decode
+  message: Python encoded execution
+  severity: high
+  category: filesystem
+  mitre_attack: T1070.004
+- id: PIPES_URL_CONTENT_SHELL
+  regex: curl\s+[^|]*\|\s*(ba)?sh
+  message: Pipes URL content to shell
+  severity: high
+  category: network
+  mitre_attack: T1071
+- id: PIPES_DOWNLOAD_SHELL
+  regex: wget\s+.*\|\s*(ba)?sh
+  message: Pipes download to shell
+  severity: high
+  category: network
+  mitre_attack: T1071
+- id: PIPES_URL_CONTENT_PYTHON
+  regex: curl\s+[^|]*\|\s*python
+  message: Pipes URL content to Python
+  severity: high
+  category: network
+  mitre_attack: T1071
+- id: SETS_WORLD_WRITABLE_SYSTEM_ROOT
+  regex: chmod\s+(-[^\s]*\s+)*777\s+/
+  message: Sets world-writable on system root
+  severity: high
+  category: system
+  mitre_attack: T1059.004
+- id: RECURSIVELY_SETS_WORLD_WRITABLE
+  regex: chmod\s+(-[^\s]*\s+)*-R\s+777
+  message: Recursively sets world-writable
+  severity: high
+  category: filesystem
+  mitre_attack: T1070.004
+- id: RECURSIVE_CHOWN_SYSTEM_DIRECTORIES
+  regex: chown\s+(-[^\s]*\s+)*-R\s+.*\s+/(?!home)
+  message: Recursive chown on system directories
+  severity: high
+  category: system
+  mitre_attack: T1059.004
+- id: CLEARS_BASH_HISTORY
+  regex: '>\s*~/\.bash_history'
+  message: Clears bash history
+  severity: high
+  category: filesystem
+  mitre_attack: T1070.004
+- id: REMOVES_ALL_CRON_JOBS
+  regex: crontab\s+-r
+  message: Removes all cron jobs
+  severity: high
+  category: filesystem
+  mitre_attack: T1070.004
+- id: PIPES_CRONTAB_POTENTIAL_PERSISTENCE
+  regex: echo.*\|\s*crontab
+  message: Pipes to crontab (potential persistence)
+  severity: high
+  category: filesystem
+  mitre_attack: T1070.004
+- id: SUDO_DELETE_SYSTEM_PATHS
+  regex: sudo\s+rm\s+(-[^\s]*\s+)*(/|/home|/etc|/usr|/var)
+  message: Sudo delete on system paths
+  severity: high
+  category: system
+  mitre_attack: T1548.003
+- id: SUDO_WORLD_WRITABLE_PERMISSION
+  regex: sudo\s+chmod\s+(-[^\s]*\s+)*777
+  message: Sudo world-writable permission
+  severity: high
+  category: system
+  mitre_attack: T1548.003
+- id: SUDO_DISK_WRITE
+  regex: sudo\s+dd\s+
+  message: Sudo disk write
+  severity: high
+  category: system
+  mitre_attack: T1548.003
+- id: DELETES_WINDOWS_SYSTEM_USER_DIRECTORY
+  regex: rd\s+(/s|/q|\s)+\s*(C:\\|C:/|%SystemRoot%|%USERPROFILE%|%APPDATA%)
+  message: Deletes Windows system/user directory
+  severity: critical
+  category: system
+  mitre_attack: T1136.001
+- id: DELETES_WINDOWS_SYSTEM_USER_DIRECTORY_2
+  regex: rmdir\s+(/s|/q|\s)+\s*(C:\\|C:/|%SystemRoot%|%USERPROFILE%)
+  message: Deletes Windows system/user directory
+  severity: critical
+  category: system
+  mitre_attack: T1136.001
+- id: DELETES_WINDOWS_SYSTEM_FILES
+  regex: del\s+(/[fqsa]|\s)+\s*(C:\\Windows|C:\\Users|%SystemRoot%)
+  message: Deletes Windows system files
+  severity: critical
+  category: system
+  mitre_attack: T1059.004
+- id: POWERSHELL_RECURSIVE_DELETE_SYSTEM_PATHS
+  regex: Remove-Item\s+.*-Recurse.*\s+(C:\\|C:/|~\\|\$env:)
+  message: PowerShell recursive delete on system paths
+  severity: high
+  category: network
+  mitre_attack: T1071
+- id: DELETES_WINDOWS_SYSTEM_USER_DIRECTORY_3
+  regex: rm\s+-r.*\s+(C:\\Windows|C:\\Users\\[^\\]+$|\$HOME)
+  message: Deletes Windows system/user directory
+  severity: critical
+  category: system
+  mitre_attack: T1136.001
+- id: DELETES_MACHINE_WIDE_REGISTRY_KEYS
+  regex: reg\s+delete\s+.*HKLM
+  message: Deletes machine-wide registry keys
+  severity: critical
+  category: credential
+  mitre_attack: T1552.004
+- id: DELETES_CRITICAL_USER_REGISTRY_KEYS
+  regex: reg\s+delete\s+.*HKCU\\Software\\Microsoft\\Windows
+  message: Deletes critical user registry keys
+  severity: critical
+  category: credential
+  mitre_attack: T1552.004
+- id: ADDS_REGISTRY_RUN_KEY_PERSISTENCE
+  regex: reg\s+add\s+.*\\Run\s+
+  message: Adds registry run key (persistence)
+  severity: medium
+  category: credential
+  mitre_attack: T1552.004
+- id: POWERSHELL_REGISTRY_DELETION
+  regex: Remove-ItemProperty.*Registry
+  message: PowerShell registry deletion
+  severity: high
+  category: network
+  mitre_attack: T1071
+- id: LISTS_STORED_WINDOWS_CREDENTIALS
+  regex: cmdkey\s+/list
+  message: Lists stored Windows credentials
+  severity: high
+  category: credential
+  mitre_attack: T1552.001
+- id: LISTS_WINDOWS_CREDENTIAL_VAULT
+  regex: vaultcmd\s+/list
+  message: Lists Windows credential vault
+  severity: high
+  category: credential
+  mitre_attack: T1552.001
+- id: CREDENTIAL_DUMPING_TOOL
+  regex: mimikatz
+  message: Credential dumping tool
+  severity: high
+  category: credential
+  mitre_attack: T1552.001
+- id: CREDENTIAL_DUMPING_MIMIKATZ_MODULE
+  regex: sekurlsa
+  message: Credential dumping (mimikatz module)
+  severity: high
+  category: credential
+  mitre_attack: T1552.001
+- id: EXPORTS_WINDOWS_CREDENTIALS
+  regex: Get-Credential.*Export
+  message: Exports Windows credentials
+  severity: high
+  category: credential
+  mitre_attack: T1552.001
+- id: COPIES_WINDOWS_PASSWORD_DATABASE
+  regex: copy.*\\Windows\\System32\\config\\(SAM|SYSTEM)
+  message: Copies Windows password database
+  severity: critical
+  category: credential
+  mitre_attack: T1020
+- id: FORMATS_WINDOWS_DRIVE
+  regex: 'format\s+[A-Za-z]:'
+  message: Formats Windows drive
+  severity: critical
+  category: filesystem
+  mitre_attack: T1485
+- id: WINDOWS_DISK_PARTITION_TOOL
+  regex: diskpart
+  message: Windows disk partition tool
+  severity: high
+  category: filesystem
+  mitre_attack: T1070.004
+- id: DELETES_BOOT_CONFIGURATION
+  regex: bcdedit\s+/delete
+  message: Deletes boot configuration
+  severity: critical
+  category: filesystem
+  mitre_attack: T1485
+- id: MODIFIES_MASTER_BOOT_RECORD
+  regex: bootrec\s+/fixmbr
+  message: Modifies master boot record
+  severity: medium
+  category: filesystem
+  mitre_attack: T1070.004
+- id: DISABLES_WINDOWS_FIREWALL
+  regex: netsh\s+advfirewall\s+set\s+.*state\s+off
+  message: Disables Windows firewall
+  severity: high
+  category: filesystem
+  mitre_attack: T1070.004
+- id: DISABLES_WINDOWS_FIREWALL_LEGACY
+  regex: netsh\s+firewall\s+set\s+opmode\s+disable
+  message: Disables Windows firewall (legacy)
+  severity: high
+  category: filesystem
+  mitre_attack: T1070.004
+- id: DISABLES_WINDOWS_DEFENDER
+  regex: Set-MpPreference\s+-DisableRealtimeMonitoring
+  message: Disables Windows Defender
+  severity: high
+  category: filesystem
+  mitre_attack: T1070.004
+- id: STOPS_WINDOWS_DEFENDER_SERVICE
+  regex: sc\s+stop\s+WinDefend
+  message: Stops Windows Defender service
+  severity: high
+  category: system
+  mitre_attack: T1059.001
+- id: ENCODED_POWERSHELL_PAYLOAD
+  regex: powershell.*-e\s+[A-Za-z0-9+/=]{20,}
+  message: Encoded PowerShell payload
+  severity: high
+  category: network
+  mitre_attack: T1071
+- id: POWERSHELL_DOWNLOAD_CRADLE
+  regex: powershell.*IEX.*\(New-Object.*Net\.WebClient\)
+  message: PowerShell download cradle
+  severity: high
+  category: network
+  mitre_attack: T1071
+- id: POWERSHELL_DOWNLOAD_AND_EXECUTE
+  regex: powershell.*Invoke-WebRequest.*\|\s*iex
+  message: PowerShell download and execute
+  severity: high
+  category: network
+  mitre_attack: T1071
+- id: CERTUTIL_DOWNLOAD_LOLBIN
+  regex: certutil.*-urlcache.*-split.*-f
+  message: Certutil download (LOLBin)
+  severity: high
+  category: filesystem
+  mitre_attack: T1070.004
+- id: BITSADMIN_DOWNLOAD_LOLBIN
+  regex: bitsadmin.*\/transfer
+  message: BITSAdmin download (LOLBin)
+  severity: high
+  category: filesystem
+  mitre_attack: T1070.004
+- id: MSHTA_REMOTE_EXECUTION
+  regex: mshta\s+http
+  message: MSHTA remote execution
+  severity: high
+  category: filesystem
+  mitre_attack: T1070.004
+- id: SCRIPT_EXECUTION_SQUIBLYDOO
+  regex: regsvr32\s+/s\s+/n\s+/u\s+/i:http
+  message: Regsvr32 script execution (Squiblydoo)
+  severity: high
+  category: filesystem
+  mitre_attack: T1070.004
+- id: CREATES_WINDOWS_USER_ACCOUNT
+  regex: net\s+user\s+.*\s+/add
+  message: Creates Windows user account
+  severity: high
+  category: filesystem
+  mitre_attack: T1070.004
+- id: ADDS_USER_ADMINISTRATORS
+  regex: net\s+localgroup\s+administrators\s+.*\s+/add
+  message: Adds user to administrators
+  severity: high
+  category: filesystem
+  mitre_attack: T1070.004
+- id: ENABLES_BUILT_ADMINISTRATOR
+  regex: net\s+user\s+administrator\s+/active:yes
+  message: Enables built-in administrator
+  severity: high
+  category: filesystem
+  mitre_attack: T1070.004
+- id: CREATES_SCHEDULED_TASK_PERSISTENCE
+  regex: schtasks\s+/create
+  message: Creates scheduled task (persistence)
+  severity: high
+  category: filesystem
+  mitre_attack: T1070.004
+- id: CREATES_JOB_LEGACY_SCHEDULER
+  regex: at\s+\d+:\d+
+  message: Creates AT job (legacy scheduler)
+  severity: high
+  category: filesystem
+  mitre_attack: T1070.004
+- id: BYPASSES_POWERSHELL_EXECUTION_POLICY
+  regex: Set-ExecutionPolicy\s+Bypass
+  message: Bypasses PowerShell execution policy
+  severity: high
+  category: network
+  mitre_attack: T1071
+- id: BYPASSES_POWERSHELL_EXECUTION_POLICY_2
+  regex: powershell.*-ExecutionPolicy\s+Bypass
+  message: Bypasses PowerShell execution policy
+  severity: high
+  category: network
+  mitre_attack: T1071
+- id: BYPASSES_POWERSHELL_EXECUTION_POLICY_3
+  regex: powershell.*-ep\s+bypass
+  message: Bypasses PowerShell execution policy
+  severity: high
+  category: network
+  mitre_attack: T1071
+- id: WITH_COMMAND_SUBSTITUTION_POTENTIAL_CODE
+  regex: \bcd\s+[^;&|]*(\$\(|`)
+  message: cd with command substitution (potential code execution)
+  severity: high
+  category: filesystem
+  mitre_attack: T1070.004
+- id: SHELL_WRAPPER_HIDING_RECURSIVE_DELETE
+  regex: \b(ba)?sh\s+-c\s+[\"'].*\brm\s+(-[^\s]*\s+)*-r
+  message: Shell wrapper hiding recursive delete
+  severity: high
+  category: network
+  mitre_attack: T1071
+- id: SHELL_WRAPPER_HIDING_DISK_WRITE
+  regex: \b(ba)?sh\s+-c\s+[\"'].*\bdd\s+.*of=/dev/
+  message: Shell wrapper hiding disk write
+  severity: high
+  category: network
+  mitre_attack: T1071
+- id: SHELL_WRAPPER_HIDING_FILESYSTEM_FORMAT
+  regex: \b(ba)?sh\s+-c\s+[\"'].*\bmkfs
+  message: Shell wrapper hiding filesystem format
+  severity: high
+  category: network
+  mitre_attack: T1071
+- id: SHELL_WRAPPER_HIDING_CURL_PIPE
+  regex: \b(ba)?sh\s+-c\s+[\"'].*\bcurl.*\|\s*(ba)?sh
+  message: Shell wrapper hiding curl pipe to shell
+  severity: high
+  category: network
+  mitre_attack: T1071
+- id: SHELL_WRAPPER_HIDING_WGET_PIPE
+  regex: \b(ba)?sh\s+-c\s+[\"'].*\bwget.*\|\s*(ba)?sh
+  message: Shell wrapper hiding wget pipe to shell
+  severity: high
+  category: network
+  mitre_attack: T1071
+- id: SUDO_SHELL_WRAPPER_HIDING_RECURSIVE
+  regex: \bsudo\s+(ba)?sh\s+-c\s+[\"'].*\brm\s+(-[^\s]*\s+)*-r
+  message: Sudo shell wrapper hiding recursive delete
+  severity: high
+  category: network
+  mitre_attack: T1071
+- id: SUDO_SHELL_WRAPPER_HIDING_CHMOD
+  regex: \bsudo\s+(ba)?sh\s+-c\s+[\"'].*\bchmod\s+(-[^\s]*\s+)*777
+  message: Sudo shell wrapper hiding chmod 777
+  severity: high
+  category: network
+  mitre_attack: T1071
+- id: ENV_WRAPPER_WITH_RECURSIVE_DELETE
+  regex: \benv\s+.*\brm\s+(-[^\s]*\s+)*-r
+  message: Env wrapper with recursive delete
+  severity: high
+  category: filesystem
+  mitre_attack: T1485
+- id: XARGS_PIPING_RECURSIVE_DELETE
+  regex: \bxargs\s+.*\brm\s+(-[^\s]*\s+)*-r
+  message: xargs piping to recursive delete
+  severity: high
+  category: filesystem
+  mitre_attack: T1485
+- id: FIND_EXEC_WITH_RECURSIVE_DELETE
+  regex: \bfind\s+.*-exec\s+rm\s+(-[^\s]*\s+)*-r
+  message: find -exec with recursive delete
+  severity: high
+  category: filesystem
+  mitre_attack: T1485
+- id: FIND_DELETE_SYSTEM_HOME_PATHS
+  regex: \bfind\s+(~|/home|/|/etc|/usr|/var)\s+.*-delete
+  message: find -delete on system/home paths
+  severity: high
+  category: system
+  mitre_attack: T1059.004
+- id: AWS_RECURSIVE_DELETE
+  regex: \baws\s+s3\s+rm\s+.*--recursive
+  message: AWS S3 recursive delete
+  severity: high
+  category: credential
+  mitre_attack: T1552.005
+- id: AWS_FORCE_REMOVE_BUCKET
+  regex: \baws\s+s3\s+rb\s+.*--force
+  message: AWS S3 force remove bucket
+  severity: high
+  category: credential
+  mitre_attack: T1552.005
+- id: AWS_TERMINATE_INSTANCES
+  regex: \baws\s+ec2\s+terminate-instances\b
+  message: AWS EC2 terminate instances
+  severity: high
+  category: credential
+  mitre_attack: T1552.005
+- id: AWS_RDS_DELETE_DATABASE
+  regex: \baws\s+rds\s+delete-db-instance\b
+  message: AWS RDS delete database
+  severity: high
+  category: credential
+  mitre_attack: T1552.005
+- id: AWS_CLOUDFORMATION_DELETE_STACK
+  regex: \baws\s+cloudformation\s+delete-stack\b
+  message: AWS CloudFormation delete stack
+  severity: high
+  category: credential
+  mitre_attack: T1552.005
+- id: AWS_DYNAMODB_DELETE_TABLE
+  regex: \baws\s+dynamodb\s+delete-table\b
+  message: AWS DynamoDB delete table
+  severity: high
+  category: credential
+  mitre_attack: T1552.005
+- id: AWS_EKS_DELETE_CLUSTER
+  regex: \baws\s+eks\s+delete-cluster\b
+  message: AWS EKS delete cluster
+  severity: high
+  category: credential
+  mitre_attack: T1552.005
+- id: AWS_LAMBDA_DELETE_FUNCTION
+  regex: \baws\s+lambda\s+delete-function\b
+  message: AWS Lambda delete function
+  severity: high
+  category: credential
+  mitre_attack: T1552.005
+- id: AWS_IAM_DELETE_ROLE
+  regex: \baws\s+iam\s+delete-role\b
+  message: AWS IAM delete role
+  severity: high
+  category: credential
+  mitre_attack: T1552.005
+- id: AWS_IAM_DELETE_USER
+  regex: \baws\s+iam\s+delete-user\b
+  message: AWS IAM delete user
+  severity: high
+  category: credential
+  mitre_attack: T1552.005
+- id: GCP_DELETE_ENTIRE_PROJECT
+  regex: \bgcloud\s+projects\s+delete\b
+  message: GCP delete entire project
+  severity: high
+  category: filesystem
+  mitre_attack: T1485
+- id: GCP_DELETE_COMPUTE_INSTANCE
+  regex: \bgcloud\s+compute\s+instances\s+delete\b
+  message: GCP delete compute instance
+  severity: high
+  category: filesystem
+  mitre_attack: T1485
+- id: GCP_DELETE_SQL_INSTANCE
+  regex: \bgcloud\s+sql\s+instances\s+delete\b
+  message: GCP delete SQL instance
+  severity: high
+  category: filesystem
+  mitre_attack: T1485
+- id: GCP_DELETE_GKE_CLUSTER
+  regex: \bgcloud\s+container\s+clusters\s+delete\b
+  message: GCP delete GKE cluster
+  severity: high
+  category: filesystem
+  mitre_attack: T1485
+- id: GCP_STORAGE_RECURSIVE_DELETE
+  regex: \bgcloud\s+storage\s+rm\s+.*-r
+  message: GCP storage recursive delete
+  severity: high
+  category: filesystem
+  mitre_attack: T1485
+- id: GCP_DELETE_CLOUD_FUNCTION
+  regex: \bgcloud\s+functions\s+delete\b
+  message: GCP delete Cloud Function
+  severity: high
+  category: filesystem
+  mitre_attack: T1485
+- id: GCP_DELETE_SERVICE_ACCOUNT
+  regex: \bgcloud\s+iam\s+service-accounts\s+delete\b
+  message: GCP delete service account
+  severity: high
+  category: system
+  mitre_attack: T1136.001
+- id: FIREBASE_DELETE_PROJECT
+  regex: \bfirebase\s+projects:delete\b
+  message: Firebase delete project
+  severity: high
+  category: filesystem
+  mitre_attack: T1485
+- id: FIREBASE_DELETE_ALL_FIRESTORE_DATA
+  regex: \bfirebase\s+firestore:delete\s+.*--all-collections
+  message: Firebase delete all Firestore data
+  severity: high
+  category: filesystem
+  mitre_attack: T1485
+- id: FIREBASE_DELETE_REALTIME
+  regex: \bfirebase\s+database:remove\b
+  message: Firebase delete Realtime DB
+  severity: high
+  category: filesystem
+  mitre_attack: T1485
+- id: FIREBASE_DELETE_FUNCTIONS
+  regex: \bfirebase\s+functions:delete\b
+  message: Firebase delete functions
+  severity: high
+  category: filesystem
+  mitre_attack: T1485
+- id: KUBERNETES_DELETE_NAMESPACE
+  regex: \bkubectl\s+delete\s+namespace\b
+  message: Kubernetes delete namespace
+  severity: high
+  category: filesystem
+  mitre_attack: T1485
+- id: KUBERNETES_DELETE_ALL_RESOURCES
+  regex: \bkubectl\s+delete\s+all\s+--all
+  message: Kubernetes delete all resources
+  severity: high
+  category: filesystem
+  mitre_attack: T1485
+- id: KUBERNETES_DELETE_ACROSS_ALL_NAMESPACES
+  regex: \bkubectl\s+delete\s+.*--all\s+--all-namespaces
+  message: Kubernetes delete across all namespaces
+  severity: high
+  category: filesystem
+  mitre_attack: T1485
+- id: HELM_UNINSTALL_RELEASE
+  regex: \bhelm\s+uninstall\b
+  message: Helm uninstall release
+  severity: high
+  category: filesystem
+  mitre_attack: T1070.004
+- id: DOCKER_PRUNE_ALL_UNUSED_DATA
+  regex: \bdocker\s+system\s+prune\s+.*-a
+  message: Docker prune all unused data
+  severity: high
+  category: credential
+  mitre_attack: T1552.001
+- id: DOCKER_REMOVE_VOLUME_DATA_LOSS
+  regex: \bdocker\s+volume\s+rm\b
+  message: Docker remove volume (data loss)
+  severity: high
+  category: credential
+  mitre_attack: T1552.001
+- id: DOCKER_PRUNE_VOLUMES
+  regex: \bdocker\s+volume\s+prune\b
+  message: Docker prune volumes
+  severity: high
+  category: credential
+  mitre_attack: T1552.001
+- id: TERRAFORM_DESTROY_INFRASTRUCTURE
+  regex: \bterraform\s+destroy\b
+  message: Terraform destroy infrastructure
+  severity: high
+  category: filesystem
+  mitre_attack: T1485
+- id: PULUMI_DESTROY_RESOURCES
+  regex: \bpulumi\s+destroy\b
+  message: Pulumi destroy resources
+  severity: high
+  category: filesystem
+  mitre_attack: T1070.004
+- id: REDIS_FLUSH_ALL_DATA
+  regex: \bredis-cli\s+FLUSHALL
+  message: Redis flush all data
+  severity: high
+  category: filesystem
+  mitre_attack: T1070.004
+- id: REDIS_FLUSH_DATABASE
+  regex: \bredis-cli\s+FLUSHDB
+  message: Redis flush database
+  severity: high
+  category: filesystem
+  mitre_attack: T1070.004
+- id: MONGODB_DROP_DATABASE
+  regex: \bmongosh?.*dropDatabase
+  message: MongoDB drop database
+  severity: high
+  category: filesystem
+  mitre_attack: T1070.004
+- id: POSTGRESQL_DROP_DATABASE
+  regex: \bdropdb\b
+  message: PostgreSQL drop database
+  severity: high
+  category: filesystem
+  mitre_attack: T1070.004
+- id: MYSQL_DROP_DATABASE
+  regex: \bmysqladmin\s+drop\b
+  message: MySQL drop database
+  severity: high
+  category: filesystem
+  mitre_attack: T1070.004
+- id: VERCEL_REMOVE_DEPLOYMENT
+  regex: \bvercel\s+remove\s+.*--yes
+  message: Vercel remove deployment
+  severity: high
+  category: filesystem
+  mitre_attack: T1070.004
+- id: VERCEL_DELETE_PROJECT
+  regex: \bvercel\s+projects\s+rm\b
+  message: Vercel delete project
+  severity: high
+  category: filesystem
+  mitre_attack: T1485
+- id: NETLIFY_DELETE_SITE
+  regex: \bnetlify\s+sites:delete\b
+  message: Netlify delete site
+  severity: high
+  category: filesystem
+  mitre_attack: T1485
+- id: HEROKU_DESTROY_APP
+  regex: \bheroku\s+apps:destroy\b
+  message: Heroku destroy app
+  severity: high
+  category: filesystem
+  mitre_attack: T1070.004
+- id: HEROKU_RESET_POSTGRES
+  regex: \bheroku\s+pg:reset\b
+  message: Heroku reset Postgres
+  severity: high
+  category: filesystem
+  mitre_attack: T1070.004
+- id: FLY_DESTROY_APP
+  regex: \bfly\s+(apps\s+)?destroy\b
+  message: Fly.io destroy app
+  severity: high
+  category: filesystem
+  mitre_attack: T1070.004
+- id: GITHUB_DELETE_REPOSITORY
+  regex: \bgh\s+repo\s+delete\b
+  message: GitHub delete repository
+  severity: high
+  category: filesystem
+  mitre_attack: T1485
+- id: NPM_UNPUBLISH_PACKAGE
+  regex: \bnpm\s+unpublish\b
+  message: npm unpublish package
+  severity: high
+  category: filesystem
+  mitre_attack: T1070.004
+- id: SQL_DELETE_WITHOUT_WHERE_CLAUSE
+  regex: \bDELETE\s+FROM\s+\w+\s*;
+  message: SQL DELETE without WHERE clause
+  severity: high
+  category: filesystem
+  mitre_attack: T1485
+- id: SQL_DELETE_WITHOUT_WHERE_CLAUSE_2
+  regex: \bDELETE\s+FROM\s+\w+\s*$
+  message: SQL DELETE without WHERE clause
+  severity: high
+  category: filesystem
+  mitre_attack: T1485
+- id: SQL_TRUNCATE_TABLE
+  regex: \bTRUNCATE\s+TABLE\b
+  message: SQL TRUNCATE TABLE
+  severity: high
+  category: filesystem
+  mitre_attack: T1070.004
+- id: SQL_DROP_TABLE
+  regex: \bDROP\s+TABLE\b
+  message: SQL DROP TABLE
+  severity: high
+  category: filesystem
+  mitre_attack: T1070.004
+- id: SQL_DROP_DATABASE
+  regex: \bDROP\s+DATABASE\b
+  message: SQL DROP DATABASE
+  severity: high
+  category: filesystem
+  mitre_attack: T1070.004
+- id: ERASES_ENTIRE_MACOS_DISK
+  regex: \bdiskutil\s+eraseDisk\b
+  message: Erases entire macOS disk
+  severity: high
+  category: filesystem
+  mitre_attack: T1070.004
+- id: ERASES_MACOS_VOLUME
+  regex: \bdiskutil\s+eraseVolume\b
+  message: Erases macOS volume
+  severity: high
+  category: filesystem
+  mitre_attack: T1070.004
+- id: REPARTITIONS_MACOS_DISK_DATA_LOSS
+  regex: \bdiskutil\s+partitionDisk\b
+  message: Repartitions macOS disk (data loss)
+  severity: high
+  category: filesystem
+  mitre_attack: T1070.004
+- id: DELETES_APFS_CONTAINER
+  regex: \bdiskutil\s+apfs\s+deleteContainer\b
+  message: Deletes APFS container
+  severity: critical
+  category: filesystem
+  mitre_attack: T1485
+- id: SECURE_ERASES_MACOS_DISK
+  regex: \bdiskutil\s+secureErase\b
+  message: Secure erases macOS disk
+  severity: high
+  category: filesystem
+  mitre_attack: T1070.004
+- id: WRITES_ZEROS_MACOS_DISK
+  regex: \bdiskutil\s+zeroDisk\b
+  message: Writes zeros to macOS disk
+  severity: high
+  category: filesystem
+  mitre_attack: T1070.004
+- id: DELETES_MACOS_KEYCHAIN
+  regex: \bsecurity\s+delete-keychain\b
+  message: Deletes macOS keychain
+  severity: critical
+  category: credential
+  mitre_attack: T1552.004
+- id: DUMPS_MACOS_KEYCHAIN_CONTENTS
+  regex: \bsecurity\s+dump-keychain\b
+  message: Dumps macOS keychain contents
+  severity: high
+  category: credential
+  mitre_attack: T1552.004
+- id: EXTRACTS_PASSWORD_FROM_MACOS_KEYCHAIN
+  regex: \bsecurity\s+find-generic-password\s+.*-w\b
+  message: Extracts password from macOS keychain
+  severity: critical
+  category: credential
+  mitre_attack: T1552.004
+- id: EXTRACTS_INTERNET_PASSWORD_FROM_KEYCHAIN
+  regex: \bsecurity\s+find-internet-password\s+.*-w\b
+  message: Extracts internet password from keychain
+  severity: critical
+  category: credential
+  mitre_attack: T1552.004
+- id: EXPORTS_MACOS_KEYCHAIN
+  regex: \bsecurity\s+export\s+.*-k\b
+  message: Exports macOS keychain
+  severity: high
+  category: credential
+  mitre_attack: T1552.004
+- id: DELETES_TIME_MACHINE_BACKUP
+  regex: \btmutil\s+delete\b
+  message: Deletes Time Machine backup
+  severity: critical
+  category: filesystem
+  mitre_attack: T1485
+- id: DISABLES_TIME_MACHINE
+  regex: \btmutil\s+disable\b
+  message: Disables Time Machine
+  severity: high
+  category: filesystem
+  mitre_attack: T1070.004
+- id: DELETES_LOCAL_TIME_MACHINE_SNAPSHOTS
+  regex: \btmutil\s+deletelocalsnapshots\b
+  message: Deletes local Time Machine snapshots
+  severity: critical
+  category: filesystem
+  mitre_attack: T1485
+- id: DELETES_TIME_MACHINE_BACKUP_DATA
+  regex: \brm\s+.*Backups\.backupdb
+  message: Deletes Time Machine backup data
+  severity: critical
+  category: filesystem
+  mitre_attack: T1485
+- id: DELETES_MACOS_USER_ACCOUNT
+  regex: \bdscl\s+\.\s+-delete\s+/Users/
+  message: Deletes macOS user account
+  severity: critical
+  category: filesystem
+  mitre_attack: T1485
+- id: DELETES_MACOS_GROUP
+  regex: \bdscl\s+\.\s+-delete\s+/Groups/
+  message: Deletes macOS group
+  severity: critical
+  category: filesystem
+  mitre_attack: T1485
+- id: ADDS_USER_ADMIN_GROUP
+  regex: \bdscl\s+\.\s+-append\s+/Groups/admin\s+
+  message: Adds user to admin group
+  severity: high
+  category: filesystem
+  mitre_attack: T1070.004
+- id: DISABLES_MACOS_GATEKEEPER
+  regex: \bspctl\s+--master-disable\b
+  message: Disables macOS Gatekeeper
+  severity: high
+  category: filesystem
+  mitre_attack: T1070.004
+- id: DISABLES_SYSTEM_INTEGRITY_PROTECTION
+  regex: \bcsrutil\s+disable\b
+  message: Disables System Integrity Protection
+  severity: high
+  category: system
+  mitre_attack: T1059.004
+- id: ENABLES_SSH_REMOTE_LOGIN
+  regex: \bsystemsetup\s+-setremotelogin\s+on\b
+  message: Enables SSH/remote login
+  severity: high
+  category: credential
+  mitre_attack: T1552.004
+- id: MODIFIES_MACOS_BOOT_ARGUMENTS
+  regex: \bnvram\s+boot-args
+  message: Modifies macOS boot arguments
+  severity: medium
+  category: filesystem
+  mitre_attack: T1070.004
+- id: DIRECT_ACCESS_MACOS_PRIVACY_DATABASE
+  regex: \bsqlite3\s+.*TCC\.db
+  message: Direct access to macOS privacy database
+  severity: high
+  category: filesystem
+  mitre_attack: T1070.004
+- id: RESETS_MACOS_PRIVACY_PERMISSIONS
+  regex: \btccutil\s+reset\b
+  message: Resets macOS privacy permissions
+  severity: high
+  category: filesystem
+  mitre_attack: T1485
+- id: LOADS_SYSTEM_DAEMON_PERSISTENCE_MECHANISM
+  regex: \blaunchctl\s+load\s+.*/Library/LaunchDaemons/
+  message: Loads system daemon (persistence mechanism)
+  severity: high
+  category: system
+  mitre_attack: T1059.004
+- id: UNLOADS_APPLE_SYSTEM_SERVICE
+  regex: \blaunchctl\s+unload\s+.*com\.apple\.
+  message: Unloads Apple system service
+  severity: high
+  category: system
+  mitre_attack: T1059.004
+- id: INSTALLS_SYSTEM_DAEMON_PERSISTENCE
+  regex: \bcp\s+.*\.plist\s+.*/Library/LaunchDaemons/
+  message: Installs system daemon (persistence)
+  severity: high
+  category: system
+  mitre_attack: T1059.004
+- id: INSTALLS_LAUNCH_AGENT_PERSISTENCE
+  regex: \bcp\s+.*\.plist\s+.*/Library/LaunchAgents/
+  message: Installs launch agent (persistence)
+  severity: high
+  category: filesystem
+  mitre_attack: T1070.004
+- id: MOVES_PLIST_LAUNCH_DIRECTORY_PERSISTENCE
+  regex: \bmv\s+.*\.plist\s+.*/Library/Launch
+  message: Moves plist to launch directory (persistence)
+  severity: high
+  category: filesystem
+  mitre_attack: T1070.004
+- id: DELETES_MACOS_APPLICATION_DATA
+  regex: \brm\s+.*~/Library/Application\\ Support/
+  message: Deletes macOS application data
+  severity: critical
+  category: filesystem
+  mitre_attack: T1485
+- id: RECURSIVELY_DELETES_MACOS_PREFERENCES
+  regex: \brm\s+(-[^\s]*\s+)*-r.*~/Library/Preferences/
+  message: Recursively deletes macOS preferences
+  severity: critical
+  category: filesystem
+  mitre_attack: T1485
+- id: DELETES_SYSTEM_PREFERENCES
+  regex: \bdefaults\s+delete\s+(com\.apple\.|NSGlobalDomain)
+  message: Deletes system preferences
+  severity: critical
+  category: system
+  mitre_attack: T1059.004

@@ -19,7 +19,21 @@ import re
 import os
 from pathlib import Path
 from datetime import datetime
-from typing import Tuple, Optional
+from typing import Tuple, Optional, List, Dict
+
+# Import pattern loader for YAML-based patterns
+try:
+    from pattern_loader import load_dangerous_reads, load_sensitive_reads
+    PATTERN_LOADER_AVAILABLE = True
+except ImportError:
+    PATTERN_LOADER_AVAILABLE = False
+
+# Import session tracker for risk scoring (v1.4.0+)
+try:
+    from session_tracker import get_tracker
+    SESSION_TRACKER_AVAILABLE = True
+except ImportError:
+    SESSION_TRACKER_AVAILABLE = False
 
 # === CONFIGURATION ===
 
@@ -43,123 +57,79 @@ except:
 # === DANGEROUS READ PATTERNS ===
 # These paths contain secrets that should never be read by AI
 
-DANGEROUS_READ_PATTERNS = [
-    # === SSH Keys ===
-    (r"[/\\]\.ssh[/\\]id_rsa$", "SSH private key (RSA)"),
-    (r"[/\\]\.ssh[/\\]id_ed25519$", "SSH private key (Ed25519)"),
-    (r"[/\\]\.ssh[/\\]id_ecdsa$", "SSH private key (ECDSA)"),
-    (r"[/\\]\.ssh[/\\]id_dsa$", "SSH private key (DSA)"),
-    (r"[/\\]\.ssh[/\\][^/\\]+\.pem$", "SSH PEM key file"),
-    (r"[/\\]\.ssh[/\\][^/\\]+\.key$", "SSH key file"),
-    (r"[/\\]\.ssh[/\\]known_hosts$", "SSH known hosts (reveals infrastructure)"),
-    (r"[/\\]\.ssh[/\\]authorized_keys$", "SSH authorized keys"),
-    (r"[/\\]\.ssh[/\\]config$", "SSH config (may contain hostnames, usernames)"),
+# Pattern registries: store full pattern metadata for risk scoring
+_READ_PATTERN_REGISTRY: Dict[str, Dict] = {}
+_SENSITIVE_READ_REGISTRY: Dict[str, Dict] = {}
 
-    # === Cloud Credentials ===
-    (r"[/\\]\.aws[/\\]credentials$", "AWS credentials file"),
-    (r"[/\\]\.aws[/\\]config$", "AWS config file"),
-    (r"[/\\]\.azure[/\\]credentials$", "Azure credentials file"),
-    (r"[/\\]\.azure[/\\]accessTokens\.json$", "Azure access tokens"),
-    (r"[/\\]\.config[/\\]gcloud[/\\]credentials\.db$", "GCP credentials database"),
-    (r"[/\\]\.config[/\\]gcloud[/\\]application_default_credentials\.json$", "GCP application credentials"),
-    (r"[/\\]\.config[/\\]gcloud[/\\]access_tokens\.db$", "GCP access tokens"),
-    (r"[/\\]\.boto$", "Legacy AWS boto config"),
+# Load patterns from YAML files (v1.4.0+) or use fallback
+def _load_dangerous_read_patterns() -> List[Tuple[str, str]]:
+    """
+    Load dangerous read patterns from YAML files.
+    Returns list of (regex, pattern_id) tuples.
+    Builds _READ_PATTERN_REGISTRY with full metadata.
+    Falls back to empty list if pattern loader unavailable.
+    """
+    global _READ_PATTERN_REGISTRY
 
-    # === Environment Files ===
-    (r"[/\\]\.env$", "Environment file with secrets"),
-    (r"[/\\]\.env\.local$", "Local environment file"),
-    (r"[/\\]\.env\.production$", "Production environment file"),
-    (r"[/\\]\.env\.development$", "Development environment file"),
-    (r"[/\\]\.env\.staging$", "Staging environment file"),
-    (r"[/\\]\.env\.test$", "Test environment file"),
-    (r"[/\\]\.env\.[a-zA-Z0-9]+$", "Environment file variant"),
+    if not PATTERN_LOADER_AVAILABLE:
+        print("Warning: pattern_loader not available, using empty dangerous read patterns list", file=sys.stderr)
+        return []
 
-    # === Token/Secret Files ===
-    (r"[/\\]credentials\.json$", "Credentials JSON file"),
-    (r"[/\\]client_secret[^/\\]*\.json$", "OAuth client secret"),
-    (r"[/\\]secrets\.yaml$", "Secrets YAML file"),
-    (r"[/\\]secrets\.yml$", "Secrets YML file"),
-    (r"[/\\]secrets\.json$", "Secrets JSON file"),
-    (r"[/\\]\.netrc$", "Network credentials file"),
-    (r"[/\\]\.npmrc$", "npm credentials file"),
-    (r"[/\\]\.pypirc$", "PyPI credentials file"),
-    (r"[/\\]\.gemrc$", "Ruby gems credentials"),
-    (r"[/\\]\.nuget[/\\]NuGet\.Config$", "NuGet credentials"),
+    try:
+        yaml_patterns = load_dangerous_reads()
 
-    # === Docker ===
-    (r"[/\\]\.dockercfg$", "Docker config file"),
-    (r"[/\\]\.docker[/\\]config\.json$", "Docker config with auth"),
+        # Build registry with full pattern data
+        _READ_PATTERN_REGISTRY.clear()
+        for pattern in yaml_patterns:
+            pattern_id = pattern.get('id', 'UNKNOWN')
+            _READ_PATTERN_REGISTRY[pattern_id] = pattern
 
-    # === Kubernetes ===
-    (r"[/\\]\.kube[/\\]config$", "Kubernetes config with credentials"),
-    (r"[/\\]kubeconfig$", "Kubernetes config file"),
-    (r"[/\\]kubeconfig\.yaml$", "Kubernetes config YAML"),
+        # Return matching list: (regex, pattern_id)
+        return [(p['regex'], p.get('id', 'UNKNOWN')) for p in yaml_patterns
+                if 'regex' in p]
 
-    # === Database ===
-    (r"[/\\]\.pgpass$", "PostgreSQL password file"),
-    (r"[/\\]\.my\.cnf$", "MySQL config with credentials"),
-    (r"[/\\]\.mongocli\.json$", "MongoDB CLI config"),
-    (r"[/\\]\.dbshell$", "Database shell history"),
+    except Exception as e:
+        print(f"Warning: Failed to load dangerous read patterns: {e}", file=sys.stderr)
+        return []
 
-    # === Private Keys (Generic) ===
-    (r"private[^/\\]*\.pem$", "Private PEM key"),
-    (r"private[^/\\]*\.key$", "Private key file"),
-    (r"[/\\][^/\\]*\.p12$", "PKCS12 certificate bundle"),
-    (r"[/\\][^/\\]*\.pfx$", "PFX certificate bundle"),
-    (r"[/\\][^/\\]*_rsa$", "RSA private key"),
-    (r"[/\\][^/\\]*_ed25519$", "Ed25519 private key"),
-    (r"[/\\][^/\\]*_ecdsa$", "ECDSA private key"),
 
-    # === Platform-Specific ===
-    (r"[/\\]\.gh[/\\]hosts\.yml$", "GitHub CLI credentials"),
-    (r"[/\\]\.config[/\\]gh[/\\]hosts\.yml$", "GitHub CLI credentials"),
-    (r"[/\\]\.config[/\\]hub$", "Hub CLI config"),
-    (r"[/\\]\.gitconfig$", "Git config (may contain credentials)"),
-    (r"[/\\]\.git-credentials$", "Git credentials file"),
-    (r"[/\\]\.hgrc$", "Mercurial config"),
-    (r"[/\\]\.svn[/\\]auth[/\\]", "SVN auth directory"),
+DANGEROUS_READ_PATTERNS = _load_dangerous_read_patterns()
 
-    # === CI/CD ===
-    (r"[/\\]\.travis\.yml$", "Travis CI config (may have encrypted secrets)"),
-    (r"[/\\]\.circleci[/\\]config\.yml$", "CircleCI config"),
 
-    # === Windows-Specific ===
-    (r"AppData[/\\]Roaming[/\\]\.aws[/\\]credentials$", "Windows AWS credentials"),
-    (r"AppData[/\\]Roaming[/\\]gcloud[/\\]credentials\.db$", "Windows GCP credentials"),
-    (r"[/\\]NTUSER\.DAT$", "Windows user registry hive"),
-    (r"[/\\]SAM$", "Windows SAM database"),
-    (r"[/\\]SYSTEM$", "Windows SYSTEM registry"),
-    (r"[/\\]SECURITY$", "Windows SECURITY registry"),
+def _load_sensitive_read_patterns() -> List[Tuple[str, str]]:
+    """
+    Load sensitive read patterns from YAML files.
+    Returns list of (regex, pattern_id) tuples.
+    Builds _SENSITIVE_READ_REGISTRY with full metadata.
+    Falls back to empty list if pattern loader unavailable.
+    """
+    global _SENSITIVE_READ_REGISTRY
 
-    # === macOS-Specific (v1.3.6) ===
-    (r"[/\\]Library[/\\]Keychains[/\\]", "macOS keychain files"),
-    (r"[/\\]com\.apple\.TCC[/\\]TCC\.db$", "macOS privacy database"),
-    (r"[/\\]Chrome[/\\].*[/\\]Login Data$", "Chrome saved passwords"),
-    (r"[/\\]Firefox[/\\].*[/\\]logins\.json$", "Firefox saved passwords"),
-    (r"[/\\]etc[/\\]authorization$", "macOS authorization database"),
-    (r"[/\\]var[/\\]db[/\\]dslocal[/\\]", "Directory services database"),
-]
+    if not PATTERN_LOADER_AVAILABLE:
+        print("Warning: pattern_loader not available, using empty sensitive read patterns list", file=sys.stderr)
+        return []
 
-# === SENSITIVE READ PATTERNS (Warn only) ===
+    try:
+        yaml_patterns = load_sensitive_reads()
 
-SENSITIVE_READ_PATTERNS = [
-    # Config files that might have secrets
-    (r"[/\\]config\.json$", "Config file (may contain secrets)"),
-    (r"[/\\]config\.yaml$", "Config file (may contain secrets)"),
-    (r"[/\\]config\.yml$", "Config file (may contain secrets)"),
-    (r"[/\\]settings\.json$", "Settings file (may contain secrets)"),
+        # Build registry with full pattern data
+        _SENSITIVE_READ_REGISTRY.clear()
+        for pattern in yaml_patterns:
+            pattern_id = pattern.get('id', 'UNKNOWN')
+            _SENSITIVE_READ_REGISTRY[pattern_id] = pattern
 
-    # Backup files of credentials
-    (r"[/\\]\.env\.bak$", "Environment file backup"),
-    (r"[/\\]\.env\.backup$", "Environment file backup"),
-    (r"[/\\]credentials\.bak$", "Credentials backup"),
+        # Return matching list: (regex, pattern_id)
+        return [(p['regex'], p.get('id', 'UNKNOWN')) for p in yaml_patterns
+                if 'regex' in p]
 
-    # Files with suspicious names
-    (r"password", "File with 'password' in name"),
-    (r"secret", "File with 'secret' in name"),
-    (r"token", "File with 'token' in name"),
-    (r"api.?key", "File with 'apikey' in name"),
-]
+    except Exception as e:
+        print(f"Warning: Failed to load sensitive read patterns: {e}", file=sys.stderr)
+        return []
+
+
+SENSITIVE_READ_PATTERNS = _load_sensitive_read_patterns()
+
+# Note: Legacy hardcoded patterns removed in v1.4.0 (now in patterns/sensitive_reads.yaml)
 
 # === SAFE READ PATTERNS ===
 # Explicit allowlist for common safe reads
@@ -273,7 +243,7 @@ SAFE_READ_PATTERNS = [
 
 # === LOGGING ===
 
-def log_decision(file_path: str, verdict: str, reason: str, layer: str):
+def log_decision(file_path: str, verdict: str, reason: str, layer: str, pattern_data: Optional[Dict] = None, risk_score: int = 0, risk_level: str = "unknown"):
     """Log security decision to audit file."""
     try:
         STATE_DIR.mkdir(parents=True, exist_ok=True)
@@ -285,6 +255,15 @@ def log_decision(file_path: str, verdict: str, reason: str, layer: str):
             "reason": reason,
             "layer": layer
         }
+
+        # Add risk scoring data if available (v1.4.0+)
+        if pattern_data:
+            entry["pattern_id"] = pattern_data.get('id')
+            entry["severity"] = pattern_data.get('severity')
+            entry["category"] = pattern_data.get('category')
+            entry["risk_score"] = risk_score
+            entry["risk_level"] = risk_level
+
         with open(LOG_FILE, "a") as f:
             f.write(json.dumps(entry) + "\n")
     except (IOError, OSError) as e:
@@ -319,20 +298,52 @@ def normalize_path(file_path: str, cwd: str) -> str:
 
 # === PATTERN CHECKING ===
 
-def check_dangerous_patterns(file_path: str) -> Tuple[bool, str]:
-    """Check if file_path matches any dangerous pattern."""
-    for pattern, reason in DANGEROUS_READ_PATTERNS:
-        if re.search(pattern, file_path, re.IGNORECASE):
-            return True, reason
-    return False, ""
+def check_dangerous_patterns(file_path: str) -> Tuple[bool, Optional[Dict]]:
+    """
+    Check if file_path matches any dangerous pattern.
+
+    Returns:
+        (matched, pattern_dict) where pattern_dict contains full metadata
+    """
+    for regex, pattern_id in DANGEROUS_READ_PATTERNS:
+        if re.search(regex, file_path, re.IGNORECASE):
+            # Retrieve full pattern metadata from registry
+            pattern_data = _READ_PATTERN_REGISTRY.get(pattern_id)
+            if pattern_data:
+                return True, pattern_data
+            else:
+                # Fallback if registry lookup fails
+                return True, {
+                    'id': pattern_id,
+                    'message': 'Dangerous read pattern detected',
+                    'severity': 'medium',
+                    'category': 'unknown',
+                }
+    return False, None
 
 
-def check_sensitive_patterns(file_path: str) -> Tuple[bool, str]:
-    """Check if file_path matches any sensitive pattern."""
-    for pattern, reason in SENSITIVE_READ_PATTERNS:
-        if re.search(pattern, file_path, re.IGNORECASE):
-            return True, reason
-    return False, ""
+def check_sensitive_patterns(file_path: str) -> Tuple[bool, Optional[Dict]]:
+    """
+    Check if file_path matches any sensitive pattern.
+
+    Returns:
+        (matched, pattern_dict) where pattern_dict contains full metadata
+    """
+    for regex, pattern_id in SENSITIVE_READ_PATTERNS:
+        if re.search(regex, file_path, re.IGNORECASE):
+            # Retrieve full pattern metadata from registry
+            pattern_data = _SENSITIVE_READ_REGISTRY.get(pattern_id)
+            if pattern_data:
+                return True, pattern_data
+            else:
+                # Fallback if registry lookup fails
+                return True, {
+                    'id': pattern_id,
+                    'message': 'Sensitive read pattern detected',
+                    'severity': 'low',
+                    'category': 'unknown',
+                }
+    return False, None
 
 
 def check_safe_patterns(file_path: str) -> bool:
@@ -393,7 +404,7 @@ def is_skip_enabled() -> bool:
 
 # === OUTPUT FUNCTIONS ===
 
-def block(reason: str, file_path: str, pattern: str = ""):
+def block(reason: str, file_path: str, pattern: str = "", pattern_data: Optional[Dict] = None, risk_score: int = 0, risk_level: str = "unknown", blocked_count: int = 0):
     """
     Block a read using Claude Code's structured JSON output.
 
@@ -414,6 +425,17 @@ def block(reason: str, file_path: str, pattern: str = ""):
             "permissionDecisionReason": msg
         }
     }
+
+    # Add risk scoring data if available (v1.4.0+)
+    if risk_score > 0:
+        output["risk_score"] = risk_score
+        output["risk_level"] = risk_level
+        output["session_stats"] = {
+            "total_blocked": blocked_count,
+            "risk_score": risk_score,
+            "risk_level": risk_level,
+        }
+
     print(json.dumps(output))
     sys.exit(0)
 
@@ -493,15 +515,70 @@ def main():
         sys.exit(0)
 
     # Check DANGEROUS patterns
-    is_dangerous, reason = check_dangerous_patterns(normalized_path)
+    is_dangerous, pattern_data = check_dangerous_patterns(normalized_path)
     if is_dangerous:
-        log_decision(normalized_path, "BLOCK", reason, "pattern")
-        block(reason, file_path, reason)
+        # Record to session tracker for risk scoring (v1.4.0+)
+        risk_score = 0
+        risk_level = "unknown"
+        blocked_count = 0
 
-    # Check SENSITIVE patterns (warn only in v1.3)
-    is_sensitive, reason = check_sensitive_patterns(normalized_path)
+        if SESSION_TRACKER_AVAILABLE and pattern_data:
+            try:
+                tracker = get_tracker()
+                tracker.record_block(normalized_path, pattern_data)
+
+                # Get updated risk metrics
+                risk_score = tracker.get_risk_score()
+                risk_level = tracker.get_risk_level()
+                blocked_count = tracker.get_blocked_count()
+
+            except Exception as e:
+                # Don't fail the hook if tracker has issues
+                print(f"Warning: Session tracker error: {e}", file=sys.stderr)
+
+        # Extract message from pattern data
+        reason = pattern_data.get('message', 'Dangerous read pattern detected') if pattern_data else 'Dangerous read pattern detected'
+        log_decision(normalized_path, "BLOCK", reason, "pattern", pattern_data, risk_score, risk_level)
+        block(reason, file_path, reason, pattern_data, risk_score, risk_level, blocked_count)
+
+    # Check SENSITIVE patterns (warn only)
+    is_sensitive, pattern_data = check_sensitive_patterns(normalized_path)
     if is_sensitive:
-        log_decision(normalized_path, "WARN", reason, "pattern")
+        # Record to session tracker with downgraded severity (v1.4.0+)
+        # Warnings get lower risk weight than blocks
+        risk_score = 0
+        risk_level = "unknown"
+
+        if SESSION_TRACKER_AVAILABLE and pattern_data:
+            try:
+                # Downgrade severity for sensitive reads (warning vs. block)
+                original_severity = pattern_data.get('severity', 'medium')
+                if original_severity == 'critical':
+                    adjusted_severity = 'high'
+                elif original_severity == 'high':
+                    adjusted_severity = 'medium'
+                else:
+                    adjusted_severity = original_severity
+
+                # Create adjusted pattern data for tracking
+                tracking_data = pattern_data.copy()
+                tracking_data['severity'] = adjusted_severity
+                tracking_data['original_severity'] = original_severity
+
+                tracker = get_tracker()
+                tracker.record_block(normalized_path, tracking_data)
+
+                # Get updated risk metrics
+                risk_score = tracker.get_risk_score()
+                risk_level = tracker.get_risk_level()
+
+            except Exception as e:
+                # Don't fail the hook if tracker has issues
+                print(f"Warning: Session tracker error: {e}", file=sys.stderr)
+
+        # Extract message from pattern data
+        reason = pattern_data.get('message', 'Sensitive read pattern detected') if pattern_data else 'Sensitive read pattern detected'
+        log_decision(normalized_path, "WARN", reason, "pattern", pattern_data, risk_score, risk_level)
         warn(reason, file_path)
         sys.exit(0)  # Allow after warning
 

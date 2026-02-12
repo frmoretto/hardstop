@@ -1,0 +1,96 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Hardstop Pattern Database Schema",
+  "description": "Schema for Hardstop security pattern definitions",
+  "type": "object",
+  "required": ["patterns"],
+  "properties": {
+    "patterns": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "regex", "message", "severity", "category"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[A-Z][A-Z0-9_]*$",
+            "description": "Unique identifier in SCREAMING_SNAKE_CASE"
+          },
+          "regex": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Python-compatible regular expression pattern"
+          },
+          "message": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Human-readable description of what the pattern detects"
+          },
+          "severity": {
+            "type": "string",
+            "enum": ["critical", "high", "medium", "low", "info"],
+            "description": "Risk severity level"
+          },
+          "category": {
+            "type": "string",
+            "enum": ["filesystem", "network", "credential", "system", "process"],
+            "description": "Pattern category for classification"
+          },
+          "mitre_attack": {
+            "type": "string",
+            "pattern": "^T[0-9]{4}(\\.[0-9]{3})?$",
+            "description": "MITRE ATT&CK technique ID (e.g., T1485 or T1552.001)"
+          },
+          "platforms": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": ["linux", "macos", "windows"]
+            },
+            "minItems": 1,
+            "uniqueItems": true,
+            "description": "Platforms where this pattern applies"
+          },
+          "added": {
+            "type": "string",
+            "format": "date",
+            "description": "Date pattern was added (YYYY-MM-DD)"
+          },
+          "updated": {
+            "type": "string",
+            "format": "date",
+            "description": "Date pattern was last modified (YYYY-MM-DD)"
+          },
+          "references": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uri"
+            },
+            "description": "External references (URLs)"
+          },
+          "examples": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["command", "should_match"],
+              "properties": {
+                "command": {
+                  "type": "string",
+                  "description": "Example command"
+                },
+                "should_match": {
+                  "type": "boolean",
+                  "description": "Whether pattern should match this example"
+                }
+              }
+            },
+            "description": "Test examples for validation"
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

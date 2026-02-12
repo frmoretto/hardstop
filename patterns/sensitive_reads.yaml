@@ -1,0 +1,67 @@
+patterns:
+- id: CONFIG_FILE_MAY_CONTAIN_SECRETS
+  regex: '[/\\]config\.json$'
+  message: Config file (may contain secrets)
+  severity: high
+  category: credential
+  mitre_attack: T1552.001
+- id: CONFIG_FILE_MAY_CONTAIN_SECRETS_2
+  regex: '[/\\]config\.yaml$'
+  message: Config file (may contain secrets)
+  severity: high
+  category: credential
+  mitre_attack: T1552.001
+- id: CONFIG_FILE_MAY_CONTAIN_SECRETS_3
+  regex: '[/\\]config\.yml$'
+  message: Config file (may contain secrets)
+  severity: high
+  category: credential
+  mitre_attack: T1552.001
+- id: SETTINGS_FILE_MAY_CONTAIN_SECRETS
+  regex: '[/\\]settings\.json$'
+  message: Settings file (may contain secrets)
+  severity: high
+  category: credential
+  mitre_attack: T1552.001
+- id: ENVIRONMENT_FILE_BACKUP
+  regex: '[/\\]\.env\.bak$'
+  message: Environment file backup
+  severity: high
+  category: credential
+  mitre_attack: T1552.001
+- id: ENVIRONMENT_FILE_BACKUP_2
+  regex: '[/\\]\.env\.backup$'
+  message: Environment file backup
+  severity: high
+  category: credential
+  mitre_attack: T1552.001
+- id: CREDENTIALS_BACKUP
+  regex: '[/\\]credentials\.bak$'
+  message: Credentials backup
+  severity: high
+  category: credential
+  mitre_attack: T1552.001
+- id: FILE_WITH_PASSWORD_NAME
+  regex: password
+  message: File with 'password' in name
+  severity: high
+  category: credential
+  mitre_attack: T1552.001
+- id: FILE_WITH_SECRET_NAME
+  regex: secret
+  message: File with 'secret' in name
+  severity: high
+  category: credential
+  mitre_attack: T1552.001
+- id: FILE_WITH_TOKEN_NAME
+  regex: token
+  message: File with 'token' in name
+  severity: high
+  category: credential
+  mitre_attack: T1552.001
+- id: FILE_WITH_APIKEY_NAME
+  regex: api.?key
+  message: File with 'apikey' in name
+  severity: high
+  category: credential
+  mitre_attack: T1552.004

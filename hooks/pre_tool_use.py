@@ -24,7 +24,21 @@ import shlex
 import tempfile
 from pathlib import Path
 from datetime import datetime
-from typing import Tuple, Optional, List
+from typing import Tuple, Optional, List, Dict
+
+# Import pattern loader for YAML-based patterns
+try:
+    from pattern_loader import load_dangerous_commands
+    PATTERN_LOADER_AVAILABLE = True
+except ImportError:
+    PATTERN_LOADER_AVAILABLE = False
+
+# Import session tracker for risk scoring (v1.4.0+)
+try:
+    from session_tracker import get_tracker
+    SESSION_TRACKER_AVAILABLE = True
+except ImportError:
+    SESSION_TRACKER_AVAILABLE = False
 
 # DEBUG: Write to file to confirm hook is being invoked
 DEBUG_FILE = Path.home() / ".hardstop" / "hook_debug.log"
@@ -47,307 +61,46 @@ FAIL_CLOSED = True
 
 # === PATTERNS ===
 
-DANGEROUS_PATTERNS = [
-    # === HOME/ROOT DELETION ===
-    # Fixed: removed $ anchor to catch commands with trailing redirects/flags
-    # But exclude echo/printf which just output strings
-    (r"(?<!echo\s)(?<!echo ')(?<!echo \")rm\s+(-[^\s]*\s+)*(/home/|~/)", "Deletes home directory"),
-    (r"(?<!echo\s)(?<!echo ')(?<!echo \")rm\s+(-[^\s]*\s+)*~(/[^/\s]+)?(\s|$|>|;|&|\|)", "Deletes home directory or subdirectory"),
-    (r"(?<!echo\s)(?<!echo ')(?<!echo \")rm\s+(-[^\s]*\s+)*/(\s|$|>|;|&|\|)", "Deletes root filesystem"),
+# Pattern registry: stores full pattern metadata for risk scoring
+_PATTERN_REGISTRY: Dict[str, Dict] = {}
 
-    # Variable expansion variants
-    (r"(?<!echo\s)rm\s+(-[^\s]*\s+)*\$HOME", "Deletes home directory via $HOME"),
-    (r"(?<!echo\s)rm\s+(-[^\s]*\s+)*\$\{HOME\}", "Deletes home directory via ${HOME}"),
-    (r"(?<!echo\s)rm\s+(-[^\s]*\s+)*/home/\$USER", "Deletes user home via $USER"),
-    (r"(?<!echo\s)rm\s+(-[^\s]*\s+)*/home/\$\{USER\}", "Deletes user home via ${USER}"),
+# Load patterns from YAML files (v1.4.0+) or use fallback
+def _load_dangerous_patterns() -> List[Tuple[str, str]]:
+    """
+    Load dangerous command patterns from YAML files.
+    Returns list of (regex, pattern_id) tuples.
+    Builds _PATTERN_REGISTRY with full metadata.
+    Falls back to empty list if pattern loader unavailable.
+    """
+    global _PATTERN_REGISTRY
 
-    # === FORK BOMB ===
-    (r":\(\)\s*\{\s*:\|:&\s*\}\s*;\s*:", "Fork bomb — will crash system"),
+    if not PATTERN_LOADER_AVAILABLE:
+        print("Warning: pattern_loader not available, using empty dangerous patterns list", file=sys.stderr)
+        return []
 
-    # === REVERSE SHELLS ===
-    (r"bash\s+-i\s+>&\s*/dev/tcp/", "Reverse shell — remote access backdoor"),
-    (r"nc\s+(-[^\s]*\s+)*-e\s+/bin/(ba)?sh", "Reverse shell via netcat"),
-    (r"/dev/tcp/[^\s]+", "Network connection via /dev/tcp"),
-    (r"mkfifo.*nc.*sh", "Reverse shell via named pipe"),
-    (r"python.*socket.*connect.*exec", "Python reverse shell"),
-    (r"perl.*socket.*exec", "Perl reverse shell"),
+    try:
+        yaml_patterns = load_dangerous_commands()
 
-    # === CREDENTIAL EXFILTRATION ===
-    # Fixed: \.ssh not \\.ssh (raw string escaping)
-    (r"curl\s+.*(-d|--data|-F|--form)\s+.*(\.ssh|\.aws|\.config|\.gnupg)", "Exfiltrates credentials"),
-    (r"wget\s+.*--post-(data|file)\s+.*(\.ssh|\.aws|\.config)", "Exfiltrates credentials"),
-    (r"cat\s+.*(\.ssh/id_|\.aws/credentials|\.env)\s*\|", "Pipes credentials to another command"),
-    (r"tar\s+.*\s+(\.ssh|\.aws|\.gnupg|\.config).*\|.*(nc|curl|wget)", "Archives and exfiltrates credentials"),
-    (r"scp\s+.*(\.ssh|\.aws|\.config).*@", "Copies credentials to remote host"),
-    # Generic: piping sensitive files to network tools
-    (r"cat\s+~/\.(ssh|aws|gnupg)/.*\|\s*nc\s+", "Pipes credentials via netcat"),
+        # Build registry with full pattern data
+        _PATTERN_REGISTRY.clear()
+        for pattern in yaml_patterns:
+            pattern_id = pattern.get('id', 'UNKNOWN')
+            _PATTERN_REGISTRY[pattern_id] = pattern
 
-    # === CREDENTIAL FILE READS (standalone, no pipe required) ===
-    (r"cat\s+.*\.ssh/(id_rsa|id_ed25519|id_ecdsa|id_dsa)", "Reads SSH private key"),
-    (r"cat\s+.*\.aws/credentials", "Reads AWS credentials"),
-    (r"cat\s+.*\.kube/config", "Reads Kubernetes credentials"),
-    (r"cat\s+.*\.docker/config\.json", "Reads Docker registry auth"),
-    (r"cat\s+.*\.npmrc", "Reads npm credentials"),
-    (r"cat\s+.*/etc/shadow", "Reads system password hashes"),
-    (r"cat\s+.*\.netrc", "Reads plaintext HTTP credentials"),
-    (r"cat\s+.*\.gnupg/", "Reads GPG private data"),
-    (r"cat\s+.*\.git-credentials", "Reads Git credentials"),
-    (r"cat\s+.*\.env(\s|$)", "Reads environment secrets"),
+        # Return matching list: (regex, pattern_id)
+        # Only include patterns that have both regex and id
+        return [(p['regex'], p.get('id', 'UNKNOWN')) for p in yaml_patterns
+                if 'regex' in p]
 
-    # === DISK DESTRUCTION ===
-    (r"dd\s+.*of=/dev/(sd[a-z]|nvme|xvd|vd[a-z])", "Overwrites disk directly"),
-    # Fixed: match partition numbers like /dev/sda1
-    (r"mkfs(\.[a-z0-9]+)?\s+.*/dev/(sd[a-z]|nvme|xvd|vd[a-z])", "Formats drive"),
-    (r">\s*/dev/(sd[a-z]|nvme)", "Redirects to raw disk"),
-    (r"shred\s+.*(/dev/|/home/|~/)", "Shreds disk or home directory"),
+    except Exception as e:
+        print(f"Warning: Failed to load dangerous patterns: {e}", file=sys.stderr)
+        return []
 
-    # === ENCODED PAYLOAD EXECUTION ===
-    (r"base64\s+-d.*\|\s*(ba)?sh", "Executes base64-encoded payload"),
-    (r"echo\s+[A-Za-z0-9+/=]+\s*\|\s*base64\s+-d\s*\|\s*(ba)?sh", "Executes encoded payload"),
-    (r"eval\s+.*\$\(.*base64", "Eval with base64 decode"),
-    (r"python.*-c.*exec.*decode", "Python encoded execution"),
 
-    # === CURL/WGET PIPE TO SHELL ===
-    (r"curl\s+[^|]*\|\s*(ba)?sh", "Pipes URL content to shell"),
-    # Fixed: more flexible wget pattern
-    (r"wget\s+.*\|\s*(ba)?sh", "Pipes download to shell"),
-    (r"curl\s+[^|]*\|\s*python", "Pipes URL content to Python"),
+# Load patterns at module import time
+DANGEROUS_PATTERNS = _load_dangerous_patterns()
 
-    # === SYSTEM DAMAGE ===
-    (r"chmod\s+(-[^\s]*\s+)*777\s+/", "Sets world-writable on system root"),
-    (r"chmod\s+(-[^\s]*\s+)*-R\s+777", "Recursively sets world-writable"),
-    (r"chown\s+(-[^\s]*\s+)*-R\s+.*\s+/(?!home)", "Recursive chown on system directories"),
-
-    # === HISTORY MANIPULATION ===
-    (r">\s*~/\.bash_history", "Clears bash history"),
-    # Note: alias patterns removed - too many false positives with legitimate aliases like:
-    # alias ls='ls --color=auto', alias rm='rm -i', alias cd='cd && ls'
-
-    # === CRON/SCHEDULED TASKS ===
-    (r"crontab\s+-r", "Removes all cron jobs"),
-    (r"echo.*\|\s*crontab", "Pipes to crontab (potential persistence)"),
-
-    # === DANGEROUS SUDO ===
-    (r"sudo\s+rm\s+(-[^\s]*\s+)*(/|/home|/etc|/usr|/var)", "Sudo delete on system paths"),
-    (r"sudo\s+chmod\s+(-[^\s]*\s+)*777", "Sudo world-writable permission"),
-    (r"sudo\s+dd\s+", "Sudo disk write"),
-
-    # ============================================================
-    # WINDOWS-SPECIFIC PATTERNS
-    # ============================================================
-
-    # === WINDOWS SYSTEM DELETION ===
-    # rd /s /q (recursive delete) on system paths
-    (r"rd\s+(/s|/q|\s)+\s*(C:\\|C:/|%SystemRoot%|%USERPROFILE%|%APPDATA%)", "Deletes Windows system/user directory"),
-    (r"rmdir\s+(/s|/q|\s)+\s*(C:\\|C:/|%SystemRoot%|%USERPROFILE%)", "Deletes Windows system/user directory"),
-    # del on system paths
-    (r"del\s+(/[fqsa]|\s)+\s*(C:\\Windows|C:\\Users|%SystemRoot%)", "Deletes Windows system files"),
-    # PowerShell Remove-Item
-    (r"Remove-Item\s+.*-Recurse.*\s+(C:\\|C:/|~\\|\$env:)", "PowerShell recursive delete on system paths"),
-    (r"rm\s+-r.*\s+(C:\\Windows|C:\\Users\\[^\\]+$|\$HOME)", "Deletes Windows system/user directory"),
-
-    # === WINDOWS REGISTRY MANIPULATION ===
-    (r"reg\s+delete\s+.*HKLM", "Deletes machine-wide registry keys"),
-    (r"reg\s+delete\s+.*HKCU\\Software\\Microsoft\\Windows", "Deletes critical user registry keys"),
-    (r"reg\s+add\s+.*\\Run\s+", "Adds registry run key (persistence)"),
-    (r"Remove-ItemProperty.*Registry", "PowerShell registry deletion"),
-
-    # === WINDOWS CREDENTIAL THEFT ===
-    (r"cmdkey\s+/list", "Lists stored Windows credentials"),
-    (r"vaultcmd\s+/list", "Lists Windows credential vault"),
-    (r"mimikatz", "Credential dumping tool"),
-    (r"sekurlsa", "Credential dumping (mimikatz module)"),
-    (r"Get-Credential.*Export", "Exports Windows credentials"),
-    (r"copy.*\\Windows\\System32\\config\\(SAM|SYSTEM)", "Copies Windows password database"),
-
-    # === WINDOWS DISK/BOOT DESTRUCTION ===
-    (r"format\s+[A-Za-z]:", "Formats Windows drive"),
-    (r"diskpart", "Windows disk partition tool"),
-    (r"bcdedit\s+/delete", "Deletes boot configuration"),
-    (r"bootrec\s+/fixmbr", "Modifies master boot record"),
-
-    # === WINDOWS FIREWALL/SECURITY ===
-    (r"netsh\s+advfirewall\s+set\s+.*state\s+off", "Disables Windows firewall"),
-    (r"netsh\s+firewall\s+set\s+opmode\s+disable", "Disables Windows firewall (legacy)"),
-    (r"Set-MpPreference\s+-DisableRealtimeMonitoring", "Disables Windows Defender"),
-    (r"sc\s+stop\s+WinDefend", "Stops Windows Defender service"),
-
-    # === WINDOWS REVERSE SHELLS ===
-    (r"powershell.*-e\s+[A-Za-z0-9+/=]{20,}", "Encoded PowerShell payload"),
-    (r"powershell.*IEX.*\(New-Object.*Net\.WebClient\)", "PowerShell download cradle"),
-    (r"powershell.*Invoke-WebRequest.*\|\s*iex", "PowerShell download and execute"),
-    (r"certutil.*-urlcache.*-split.*-f", "Certutil download (LOLBin)"),
-    (r"bitsadmin.*\/transfer", "BITSAdmin download (LOLBin)"),
-    (r"mshta\s+http", "MSHTA remote execution"),
-    (r"regsvr32\s+/s\s+/n\s+/u\s+/i:http", "Regsvr32 script execution (Squiblydoo)"),
-
-    # === WINDOWS USER/ADMIN MANIPULATION ===
-    (r"net\s+user\s+.*\s+/add", "Creates Windows user account"),
-    (r"net\s+localgroup\s+administrators\s+.*\s+/add", "Adds user to administrators"),
-    (r"net\s+user\s+administrator\s+/active:yes", "Enables built-in administrator"),
-
-    # === WINDOWS SCHEDULED TASKS ===
-    (r"schtasks\s+/create", "Creates scheduled task (persistence)"),
-    (r"at\s+\d+:\d+", "Creates AT job (legacy scheduler)"),
-
-    # === POWERSHELL EXECUTION POLICY BYPASS ===
-    (r"Set-ExecutionPolicy\s+Bypass", "Bypasses PowerShell execution policy"),
-    (r"powershell.*-ExecutionPolicy\s+Bypass", "Bypasses PowerShell execution policy"),
-    (r"powershell.*-ep\s+bypass", "Bypasses PowerShell execution policy"),
-
-    # === COMMAND SUBSTITUTION IN ARGUMENTS ===
-    # Defense in depth: catch command substitution hiding dangerous commands
-    # Use [^;&|]* to stop at chain operators (prevents matching across && boundaries)
-    (r"\bcd\s+[^;&|]*(\$\(|`)", "cd with command substitution (potential code execution)"),
-
-    # ============================================================
-    # SHELL WRAPPER PATTERNS (detecting hidden dangerous commands)
-    # ============================================================
-
-    # bash -c / sh -c with dangerous payloads
-    (r"\b(ba)?sh\s+-c\s+[\"'].*\brm\s+(-[^\s]*\s+)*-r", "Shell wrapper hiding recursive delete"),
-    (r"\b(ba)?sh\s+-c\s+[\"'].*\bdd\s+.*of=/dev/", "Shell wrapper hiding disk write"),
-    (r"\b(ba)?sh\s+-c\s+[\"'].*\bmkfs", "Shell wrapper hiding filesystem format"),
-    (r"\b(ba)?sh\s+-c\s+[\"'].*\bcurl.*\|\s*(ba)?sh", "Shell wrapper hiding curl pipe to shell"),
-    (r"\b(ba)?sh\s+-c\s+[\"'].*\bwget.*\|\s*(ba)?sh", "Shell wrapper hiding wget pipe to shell"),
-
-    # sudo with shell wrappers
-    (r"\bsudo\s+(ba)?sh\s+-c\s+[\"'].*\brm\s+(-[^\s]*\s+)*-r", "Sudo shell wrapper hiding recursive delete"),
-    (r"\bsudo\s+(ba)?sh\s+-c\s+[\"'].*\bchmod\s+(-[^\s]*\s+)*777", "Sudo shell wrapper hiding chmod 777"),
-
-    # env wrapper with dangerous commands
-    (r"\benv\s+.*\brm\s+(-[^\s]*\s+)*-r", "Env wrapper with recursive delete"),
-
-    # xargs / find -exec with dangerous commands
-    (r"\bxargs\s+.*\brm\s+(-[^\s]*\s+)*-r", "xargs piping to recursive delete"),
-    (r"\bfind\s+.*-exec\s+rm\s+(-[^\s]*\s+)*-r", "find -exec with recursive delete"),
-    # Note: generic 'find -delete' removed - too common for legitimate cleanup like:
-    # find . -name "*.tmp" -delete, find /tmp -mtime +7 -delete
-    # Only block find -delete on dangerous paths:
-    (r"\bfind\s+(~|/home|/|/etc|/usr|/var)\s+.*-delete", "find -delete on system/home paths"),
-
-    # ============================================================
-    # CLOUD CLI DESTRUCTIVE OPERATIONS
-    # ============================================================
-
-    # === AWS CLI ===
-    (r"\baws\s+s3\s+rm\s+.*--recursive", "AWS S3 recursive delete"),
-    (r"\baws\s+s3\s+rb\s+.*--force", "AWS S3 force remove bucket"),
-    (r"\baws\s+ec2\s+terminate-instances\b", "AWS EC2 terminate instances"),
-    (r"\baws\s+rds\s+delete-db-instance\b", "AWS RDS delete database"),
-    (r"\baws\s+cloudformation\s+delete-stack\b", "AWS CloudFormation delete stack"),
-    (r"\baws\s+dynamodb\s+delete-table\b", "AWS DynamoDB delete table"),
-    (r"\baws\s+eks\s+delete-cluster\b", "AWS EKS delete cluster"),
-    (r"\baws\s+lambda\s+delete-function\b", "AWS Lambda delete function"),
-    (r"\baws\s+iam\s+delete-role\b", "AWS IAM delete role"),
-    (r"\baws\s+iam\s+delete-user\b", "AWS IAM delete user"),
-
-    # === GCP (gcloud) ===
-    (r"\bgcloud\s+projects\s+delete\b", "GCP delete entire project"),
-    (r"\bgcloud\s+compute\s+instances\s+delete\b", "GCP delete compute instance"),
-    (r"\bgcloud\s+sql\s+instances\s+delete\b", "GCP delete SQL instance"),
-    (r"\bgcloud\s+container\s+clusters\s+delete\b", "GCP delete GKE cluster"),
-    (r"\bgcloud\s+storage\s+rm\s+.*-r", "GCP storage recursive delete"),
-    (r"\bgcloud\s+functions\s+delete\b", "GCP delete Cloud Function"),
-    (r"\bgcloud\s+iam\s+service-accounts\s+delete\b", "GCP delete service account"),
-
-    # === FIREBASE ===
-    (r"\bfirebase\s+projects:delete\b", "Firebase delete project"),
-    (r"\bfirebase\s+firestore:delete\s+.*--all-collections", "Firebase delete all Firestore data"),
-    (r"\bfirebase\s+database:remove\b", "Firebase delete Realtime DB"),
-    (r"\bfirebase\s+functions:delete\b", "Firebase delete functions"),
-
-    # === KUBERNETES (kubectl) ===
-    (r"\bkubectl\s+delete\s+namespace\b", "Kubernetes delete namespace"),
-    (r"\bkubectl\s+delete\s+all\s+--all", "Kubernetes delete all resources"),
-    (r"\bkubectl\s+delete\s+.*--all\s+--all-namespaces", "Kubernetes delete across all namespaces"),
-    (r"\bhelm\s+uninstall\b", "Helm uninstall release"),
-
-    # === DOCKER ===
-    (r"\bdocker\s+system\s+prune\s+.*-a", "Docker prune all unused data"),
-    (r"\bdocker\s+volume\s+rm\b", "Docker remove volume (data loss)"),
-    (r"\bdocker\s+volume\s+prune\b", "Docker prune volumes"),
-
-    # === TERRAFORM / PULUMI ===
-    (r"\bterraform\s+destroy\b", "Terraform destroy infrastructure"),
-    (r"\bpulumi\s+destroy\b", "Pulumi destroy resources"),
-
-    # === DATABASE CLI ===
-    (r"\bredis-cli\s+FLUSHALL", "Redis flush all data"),
-    (r"\bredis-cli\s+FLUSHDB", "Redis flush database"),
-    (r"\bmongosh?.*dropDatabase", "MongoDB drop database"),
-    (r"\bdropdb\b", "PostgreSQL drop database"),
-    (r"\bmysqladmin\s+drop\b", "MySQL drop database"),
-
-    # === OTHER PLATFORMS ===
-    (r"\bvercel\s+remove\s+.*--yes", "Vercel remove deployment"),
-    (r"\bvercel\s+projects\s+rm\b", "Vercel delete project"),
-    (r"\bnetlify\s+sites:delete\b", "Netlify delete site"),
-    (r"\bheroku\s+apps:destroy\b", "Heroku destroy app"),
-    (r"\bheroku\s+pg:reset\b", "Heroku reset Postgres"),
-    (r"\bfly\s+(apps\s+)?destroy\b", "Fly.io destroy app"),
-    (r"\bgh\s+repo\s+delete\b", "GitHub delete repository"),
-    (r"\bnpm\s+unpublish\b", "npm unpublish package"),
-
-    # === SQL DESTRUCTIVE (without WHERE) ===
-    (r"\bDELETE\s+FROM\s+\w+\s*;", "SQL DELETE without WHERE clause"),
-    (r"\bDELETE\s+FROM\s+\w+\s*$", "SQL DELETE without WHERE clause"),
-    (r"\bTRUNCATE\s+TABLE\b", "SQL TRUNCATE TABLE"),
-    (r"\bDROP\s+TABLE\b", "SQL DROP TABLE"),
-    (r"\bDROP\s+DATABASE\b", "SQL DROP DATABASE"),
-
-    # ============================================================
-    # MACOS-SPECIFIC PATTERNS (v1.3.6)
-    # ============================================================
-
-    # === DISK UTILITY ===
-    (r"\bdiskutil\s+eraseDisk\b", "Erases entire macOS disk"),
-    (r"\bdiskutil\s+eraseVolume\b", "Erases macOS volume"),
-    (r"\bdiskutil\s+partitionDisk\b", "Repartitions macOS disk (data loss)"),
-    (r"\bdiskutil\s+apfs\s+deleteContainer\b", "Deletes APFS container"),
-    (r"\bdiskutil\s+secureErase\b", "Secure erases macOS disk"),
-    (r"\bdiskutil\s+zeroDisk\b", "Writes zeros to macOS disk"),
-
-    # === KEYCHAIN ACCESS ===
-    (r"\bsecurity\s+delete-keychain\b", "Deletes macOS keychain"),
-    (r"\bsecurity\s+dump-keychain\b", "Dumps macOS keychain contents"),
-    (r"\bsecurity\s+find-generic-password\s+.*-w\b", "Extracts password from macOS keychain"),
-    (r"\bsecurity\s+find-internet-password\s+.*-w\b", "Extracts internet password from keychain"),
-    (r"\bsecurity\s+export\s+.*-k\b", "Exports macOS keychain"),
-
-    # === TIME MACHINE ===
-    (r"\btmutil\s+delete\b", "Deletes Time Machine backup"),
-    (r"\btmutil\s+disable\b", "Disables Time Machine"),
-    (r"\btmutil\s+deletelocalsnapshots\b", "Deletes local Time Machine snapshots"),
-    (r"\brm\s+.*Backups\.backupdb", "Deletes Time Machine backup data"),
-
-    # === DIRECTORY SERVICES ===
-    (r"\bdscl\s+\.\s+-delete\s+/Users/", "Deletes macOS user account"),
-    (r"\bdscl\s+\.\s+-delete\s+/Groups/", "Deletes macOS group"),
-    (r"\bdscl\s+\.\s+-append\s+/Groups/admin\s+", "Adds user to admin group"),
-
-    # === SYSTEM SECURITY ===
-    (r"\bspctl\s+--master-disable\b", "Disables macOS Gatekeeper"),
-    (r"\bcsrutil\s+disable\b", "Disables System Integrity Protection"),
-    (r"\bsystemsetup\s+-setremotelogin\s+on\b", "Enables SSH/remote login"),
-    (r"\bnvram\s+boot-args", "Modifies macOS boot arguments"),
-
-    # === PRIVACY DATABASE ===
-    (r"\bsqlite3\s+.*TCC\.db", "Direct access to macOS privacy database"),
-    (r"\btccutil\s+reset\b", "Resets macOS privacy permissions"),
-
-    # === PERSISTENCE ===
-    (r"\blaunchctl\s+load\s+.*/Library/LaunchDaemons/", "Loads system daemon (persistence mechanism)"),
-    (r"\blaunchctl\s+unload\s+.*com\.apple\.", "Unloads Apple system service"),
-    (r"\bcp\s+.*\.plist\s+.*/Library/LaunchDaemons/", "Installs system daemon (persistence)"),
-    (r"\bcp\s+.*\.plist\s+.*/Library/LaunchAgents/", "Installs launch agent (persistence)"),
-    (r"\bmv\s+.*\.plist\s+.*/Library/Launch", "Moves plist to launch directory (persistence)"),
-
-    # === APPLICATION DATA ===
-    (r"\brm\s+.*~/Library/Application\\ Support/", "Deletes macOS application data"),
-    (r"\brm\s+(-[^\s]*\s+)*-r.*~/Library/Preferences/", "Recursively deletes macOS preferences"),
-    (r"\bdefaults\s+delete\s+(com\.apple\.|NSGlobalDomain)", "Deletes system preferences"),
-]
+# Note: Legacy hardcoded patterns removed in v1.4.0 (now in patterns/dangerous_commands.yaml)
 
 SAFE_PATTERNS = [
     # Hardstop's own operations (must be able to manage itself)
@@ -498,7 +251,7 @@ JSON response:'''
 
 # === LOGGING ===
 
-def log_decision(command: str, verdict: str, reason: str, layer: str, cwd: str):
+def log_decision(command: str, verdict: str, reason: str, layer: str, cwd: str, pattern_data: Optional[Dict] = None, risk_score: int = 0, risk_level: str = "unknown"):
     """Log security decision to audit file."""
     try:
         STATE_DIR.mkdir(parents=True, exist_ok=True)
@@ -511,6 +264,15 @@ def log_decision(command: str, verdict: str, reason: str, layer: str, cwd: str):
             "reason": reason,
             "layer": layer
         }
+
+        # Add risk scoring data if available (v1.4.0+)
+        if pattern_data:
+            entry["pattern_id"] = pattern_data.get('id')
+            entry["severity"] = pattern_data.get('severity')
+            entry["category"] = pattern_data.get('category')
+            entry["risk_score"] = risk_score
+            entry["risk_level"] = risk_level
+
         with open(LOG_FILE, "a") as f:
             f.write(json.dumps(entry) + "\n")
     except (IOError, OSError) as e:
@@ -681,15 +443,37 @@ def split_chained_commands(command: str) -> List[str]:
 
 # === PATTERN MATCHING ===
 
-def check_dangerous(command: str) -> Tuple[bool, Optional[str]]:
-    """Check against dangerous patterns. Returns (matched, message)."""
-    for pattern, message in DANGEROUS_PATTERNS:
+def check_dangerous(command: str) -> Tuple[bool, Optional[Dict]]:
+    """
+    Check against dangerous patterns.
+
+    Returns:
+        (matched, pattern_dict) where pattern_dict contains:
+            - id: Pattern identifier
+            - regex: Regular expression
+            - message: Human-readable description
+            - severity: Risk level (critical/high/medium/low/info)
+            - category: Attack category
+    """
+    for regex, pattern_id in DANGEROUS_PATTERNS:
         try:
-            if re.search(pattern, command, re.IGNORECASE):
-                return True, message
+            if re.search(regex, command, re.IGNORECASE):
+                # Retrieve full pattern metadata from registry
+                pattern_data = _PATTERN_REGISTRY.get(pattern_id)
+                if pattern_data:
+                    return True, pattern_data
+                else:
+                    # Fallback if registry lookup fails
+                    return True, {
+                        'id': pattern_id,
+                        'message': 'Dangerous pattern detected',
+                        'severity': 'medium',
+                        'category': 'unknown',
+                    }
         except re.error as e:
             # Log regex errors but don't crash
-            print(f"Warning: Invalid regex pattern '{pattern}': {e}", file=sys.stderr)
+            print(f"Warning: Invalid regex pattern '{regex}': {e}", file=sys.stderr)
+
     return False, None
 
 
@@ -718,18 +502,23 @@ def _build_claude_exec(claude_path: str, args: List[str]) -> List[str]:
     return [claude_path, *args]
 
 
-def check_all_commands(command: str) -> Tuple[bool, Optional[str]]:
+def check_all_commands(command: str) -> Tuple[bool, Optional[Dict]]:
     """
     Check a potentially chained command.
     Splits on &&, ||, ;, | and checks each part.
-    Returns (is_dangerous, message) - dangerous if ANY part is dangerous.
+    Returns (is_dangerous, pattern_dict) - dangerous if ANY part is dangerous.
     """
     parts = split_chained_commands(command)
 
     for part in parts:
-        is_dangerous, message = check_dangerous(part)
+        is_dangerous, pattern_data = check_dangerous(part)
         if is_dangerous:
-            return True, f"{message} (in chained command)"
+            # Add note about chained command to the pattern data
+            if pattern_data:
+                pattern_data = pattern_data.copy()
+                original_message = pattern_data.get('message', 'Dangerous pattern detected')
+                pattern_data['message'] = f"{original_message} (in chained command)"
+            return True, pattern_data
 
     return False, None
 
@@ -936,7 +725,7 @@ def ask_claude(command: str, cwd: str) -> Tuple[str, str]:
 
 # === MAIN ===
 
-def block_command(message: str, command: str, layer: str, cwd: str):
+def block_command(message: str, command: str, layer: str, cwd: str, pattern_data: Optional[Dict] = None, risk_score: int = 0, risk_level: str = "unknown", blocked_count: int = 0):
     """
     Block a command using Claude Code's structured JSON output.
 
@@ -944,7 +733,7 @@ def block_command(message: str, command: str, layer: str, cwd: str):
     This ensures consistent behavior between CLI and VS Code extension.
     Exit code 2 causes VS Code to treat it as a session error and restart the chat.
     """
-    log_decision(command, "BLOCK", message, layer, cwd)
+    log_decision(command, "BLOCK", message, layer, cwd, pattern_data, risk_score, risk_level)
 
     # Build the block reason message
     truncated_cmd = command[:100] + ('...' if len(command) > 100 else '')
@@ -958,6 +747,17 @@ def block_command(message: str, command: str, layer: str, cwd: str):
             "permissionDecisionReason": reason
         }
     }
+
+    # Add risk scoring data if available (v1.4.0+)
+    if risk_score > 0:
+        output["risk_score"] = risk_score
+        output["risk_level"] = risk_level
+        output["session_stats"] = {
+            "total_blocked": blocked_count,
+            "risk_score": risk_score,
+            "risk_level": risk_level,
+        }
+
     print(json.dumps(output))
     sys.exit(0)
 
@@ -1047,9 +847,30 @@ def main():
     # Uses chained command detection to check ALL parts of piped/chained commands
 
     # Check dangerous patterns first (any part dangerous = block whole command)
-    is_dangerous, danger_message = check_all_commands(command)
+    is_dangerous, pattern_data = check_all_commands(command)
     if is_dangerous:
-        block_command(danger_message, command, "pattern", cwd)
+        # Record to session tracker for risk scoring (v1.4.0+)
+        risk_score = 0
+        risk_level = "unknown"
+        blocked_count = 0
+
+        if SESSION_TRACKER_AVAILABLE and pattern_data:
+            try:
+                tracker = get_tracker()
+                tracker.record_block(command, pattern_data)
+
+                # Get updated risk metrics
+                risk_score = tracker.get_risk_score()
+                risk_level = tracker.get_risk_level()
+                blocked_count = tracker.get_blocked_count()
+
+            except Exception as e:
+                # Don't fail the hook if tracker has issues
+                print(f"Warning: Session tracker error: {e}", file=sys.stderr)
+
+        # Extract message from pattern data
+        danger_message = pattern_data.get('message', 'Dangerous pattern detected') if pattern_data else 'Dangerous pattern detected'
+        block_command(danger_message, command, "pattern", cwd, pattern_data, risk_score, risk_level, blocked_count)
 
     # Check if ALL parts are safe patterns
     if is_all_safe(command):

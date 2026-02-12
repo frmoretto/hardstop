@@ -11,7 +11,22 @@
     "shell-protection",
     "ai-safety",
     "mitre-attack",
-    "risk-scoring"
+    "risk-scoring",
+    "command-validation",
+    "shell-safety",
+    "ai-agent-security",
+    "bash-guardrail",
+    "pre-execution-check",
+    "prompt-injection-defense",
+    "agentic-safety",
+    "claude-code-hooks",
+    "llm-command-filter",
+    "dangerous-command-detection",
+    "supply-chain-security",
+    "fail-closed",
+    "command-allowlist",
+    "command-blocklist",
+    "claude-cowork"
   ],
   "author": {
     "name": "Francesco Marinoni Moretto",

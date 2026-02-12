@@ -1,0 +1,427 @@
+patterns:
+- id: SSH_PRIVATE_KEY_RSA
+  regex: '[/\\]\.ssh[/\\]id_rsa$'
+  message: SSH private key (RSA)
+  severity: critical
+  category: credential
+  mitre_attack: T1552.004
+- id: SSH_PRIVATE_KEY
+  regex: '[/\\]\.ssh[/\\]id_ed25519$'
+  message: SSH private key (Ed25519)
+  severity: critical
+  category: credential
+  mitre_attack: T1552.004
+- id: SSH_PRIVATE_KEY_ECDSA
+  regex: '[/\\]\.ssh[/\\]id_ecdsa$'
+  message: SSH private key (ECDSA)
+  severity: critical
+  category: credential
+  mitre_attack: T1552.004
+- id: SSH_PRIVATE_KEY_DSA
+  regex: '[/\\]\.ssh[/\\]id_dsa$'
+  message: SSH private key (DSA)
+  severity: critical
+  category: credential
+  mitre_attack: T1552.004
+- id: SSH_PEM_KEY_FILE
+  regex: '[/\\]\.ssh[/\\][^/\\]+\.pem$'
+  message: SSH PEM key file
+  severity: critical
+  category: credential
+  mitre_attack: T1552.004
+- id: SSH_KEY_FILE
+  regex: '[/\\]\.ssh[/\\][^/\\]+\.key$'
+  message: SSH key file
+  severity: critical
+  category: credential
+  mitre_attack: T1552.004
+- id: SSH_KNOWN_HOSTS_REVEALS_INFRASTRUCTURE
+  regex: '[/\\]\.ssh[/\\]known_hosts$'
+  message: SSH known hosts (reveals infrastructure)
+  severity: critical
+  category: credential
+  mitre_attack: T1552.004
+- id: SSH_AUTHORIZED_KEYS
+  regex: '[/\\]\.ssh[/\\]authorized_keys$'
+  message: SSH authorized keys
+  severity: critical
+  category: credential
+  mitre_attack: T1552.004
+- id: SSH_CONFIG_MAY_CONTAIN_HOSTNAMES
+  regex: '[/\\]\.ssh[/\\]config$'
+  message: SSH config (may contain hostnames, usernames)
+  severity: critical
+  category: credential
+  mitre_attack: T1552.004
+- id: AWS_CREDENTIALS_FILE
+  regex: '[/\\]\.aws[/\\]credentials$'
+  message: AWS credentials file
+  severity: critical
+  category: credential
+  mitre_attack: T1552.005
+- id: AWS_CONFIG_FILE
+  regex: '[/\\]\.aws[/\\]config$'
+  message: AWS config file
+  severity: critical
+  category: credential
+  mitre_attack: T1552.005
+- id: AZURE_CREDENTIALS_FILE
+  regex: '[/\\]\.azure[/\\]credentials$'
+  message: Azure credentials file
+  severity: critical
+  category: credential
+  mitre_attack: T1552.005
+- id: AZURE_ACCESS_TOKENS
+  regex: '[/\\]\.azure[/\\]accessTokens\.json$'
+  message: Azure access tokens
+  severity: critical
+  category: credential
+  mitre_attack: T1552.005
+- id: GCP_CREDENTIALS_DATABASE
+  regex: '[/\\]\.config[/\\]gcloud[/\\]credentials\.db$'
+  message: GCP credentials database
+  severity: critical
+  category: credential
+  mitre_attack: T1552.005
+- id: GCP_APPLICATION_CREDENTIALS
+  regex: '[/\\]\.config[/\\]gcloud[/\\]application_default_credentials\.json$'
+  message: GCP application credentials
+  severity: critical
+  category: credential
+  mitre_attack: T1552.005
+- id: GCP_ACCESS_TOKENS
+  regex: '[/\\]\.config[/\\]gcloud[/\\]access_tokens\.db$'
+  message: GCP access tokens
+  severity: critical
+  category: credential
+  mitre_attack: T1552.005
+- id: LEGACY_AWS_BOTO_CONFIG
+  regex: '[/\\]\.boto$'
+  message: Legacy AWS boto config
+  severity: critical
+  category: credential
+  mitre_attack: T1552.005
+- id: ENVIRONMENT_FILE_WITH_SECRETS
+  regex: '[/\\]\.env$'
+  message: Environment file with secrets
+  severity: critical
+  category: credential
+  mitre_attack: T1552.001
+- id: LOCAL_ENVIRONMENT_FILE
+  regex: '[/\\]\.env\.local$'
+  message: Local environment file
+  severity: critical
+  category: credential
+  mitre_attack: T1552.001
+- id: PRODUCTION_ENVIRONMENT_FILE
+  regex: '[/\\]\.env\.production$'
+  message: Production environment file
+  severity: critical
+  category: credential
+  mitre_attack: T1552.001
+- id: DEVELOPMENT_ENVIRONMENT_FILE
+  regex: '[/\\]\.env\.development$'
+  message: Development environment file
+  severity: critical
+  category: credential
+  mitre_attack: T1552.001
+- id: STAGING_ENVIRONMENT_FILE
+  regex: '[/\\]\.env\.staging$'
+  message: Staging environment file
+  severity: critical
+  category: credential
+  mitre_attack: T1552.001
+- id: TEST_ENVIRONMENT_FILE
+  regex: '[/\\]\.env\.test$'
+  message: Test environment file
+  severity: critical
+  category: credential
+  mitre_attack: T1552.001
+- id: ENVIRONMENT_FILE_VARIANT
+  regex: '[/\\]\.env\.[a-zA-Z0-9]+$'
+  message: Environment file variant
+  severity: critical
+  category: credential
+  mitre_attack: T1552.001
+- id: CREDENTIALS_JSON_FILE
+  regex: '[/\\]credentials\.json$'
+  message: Credentials JSON file
+  severity: critical
+  category: credential
+  mitre_attack: T1552.001
+- id: OAUTH_CLIENT_SECRET
+  regex: '[/\\]client_secret[^/\\]*\.json$'
+  message: OAuth client secret
+  severity: critical
+  category: credential
+  mitre_attack: T1552.001
+- id: SECRETS_YAML_FILE
+  regex: '[/\\]secrets\.yaml$'
+  message: Secrets YAML file
+  severity: critical
+  category: credential
+  mitre_attack: T1552.001
+- id: SECRETS_YML_FILE
+  regex: '[/\\]secrets\.yml$'
+  message: Secrets YML file
+  severity: critical
+  category: credential
+  mitre_attack: T1552.001
+- id: SECRETS_JSON_FILE
+  regex: '[/\\]secrets\.json$'
+  message: Secrets JSON file
+  severity: critical
+  category: credential
+  mitre_attack: T1552.001
+- id: NETWORK_CREDENTIALS_FILE
+  regex: '[/\\]\.netrc$'
+  message: Network credentials file
+  severity: critical
+  category: credential
+  mitre_attack: T1552.001
+- id: NPM_CREDENTIALS_FILE
+  regex: '[/\\]\.npmrc$'
+  message: npm credentials file
+  severity: critical
+  category: credential
+  mitre_attack: T1552.001
+- id: PYPI_CREDENTIALS_FILE
+  regex: '[/\\]\.pypirc$'
+  message: PyPI credentials file
+  severity: critical
+  category: credential
+  mitre_attack: T1552.001
+- id: RUBY_GEMS_CREDENTIALS
+  regex: '[/\\]\.gemrc$'
+  message: Ruby gems credentials
+  severity: critical
+  category: credential
+  mitre_attack: T1552.001
+- id: NUGET_CREDENTIALS
+  regex: '[/\\]\.nuget[/\\]NuGet\.Config$'
+  message: NuGet credentials
+  severity: critical
+  category: credential
+  mitre_attack: T1552.001
+- id: DOCKER_CONFIG_FILE
+  regex: '[/\\]\.dockercfg$'
+  message: Docker config file
+  severity: critical
+  category: credential
+  mitre_attack: T1552.001
+- id: DOCKER_CONFIG_WITH_AUTH
+  regex: '[/\\]\.docker[/\\]config\.json$'
+  message: Docker config with auth
+  severity: critical
+  category: credential
+  mitre_attack: T1552.001
+- id: KUBERNETES_CONFIG_WITH_CREDENTIALS
+  regex: '[/\\]\.kube[/\\]config$'
+  message: Kubernetes config with credentials
+  severity: critical
+  category: credential
+  mitre_attack: T1552.001
+- id: KUBERNETES_CONFIG_FILE
+  regex: '[/\\]kubeconfig$'
+  message: Kubernetes config file
+  severity: critical
+  category: credential
+  mitre_attack: T1552.001
+- id: KUBERNETES_CONFIG_YAML
+  regex: '[/\\]kubeconfig\.yaml$'
+  message: Kubernetes config YAML
+  severity: critical
+  category: credential
+  mitre_attack: T1552.001
+- id: POSTGRESQL_PASSWORD_FILE
+  regex: '[/\\]\.pgpass$'
+  message: PostgreSQL password file
+  severity: critical
+  category: credential
+  mitre_attack: T1552.001
+- id: MYSQL_CONFIG_WITH_CREDENTIALS
+  regex: '[/\\]\.my\.cnf$'
+  message: MySQL config with credentials
+  severity: critical
+  category: credential
+  mitre_attack: T1552.001
+- id: MONGODB_CLI_CONFIG
+  regex: '[/\\]\.mongocli\.json$'
+  message: MongoDB CLI config
+  severity: critical
+  category: credential
+  mitre_attack: T1552.001
+- id: DATABASE_SHELL_HISTORY
+  regex: '[/\\]\.dbshell$'
+  message: Database shell history
+  severity: critical
+  category: credential
+  mitre_attack: T1552.001
+- id: PRIVATE_PEM_KEY
+  regex: private[^/\\]*\.pem$
+  message: Private PEM key
+  severity: critical
+  category: credential
+  mitre_attack: T1552.004
+- id: PRIVATE_KEY_FILE
+  regex: private[^/\\]*\.key$
+  message: Private key file
+  severity: critical
+  category: credential
+  mitre_attack: T1552.004
+- id: CERTIFICATE_BUNDLE
+  regex: '[/\\][^/\\]*\.p12$'
+  message: PKCS12 certificate bundle
+  severity: critical
+  category: credential
+  mitre_attack: T1552.001
+- id: PFX_CERTIFICATE_BUNDLE
+  regex: '[/\\][^/\\]*\.pfx$'
+  message: PFX certificate bundle
+  severity: critical
+  category: credential
+  mitre_attack: T1552.001
+- id: RSA_PRIVATE_KEY
+  regex: '[/\\][^/\\]*_rsa$'
+  message: RSA private key
+  severity: critical
+  category: credential
+  mitre_attack: T1552.004
+- id: PRIVATE_KEY
+  regex: '[/\\][^/\\]*_ed25519$'
+  message: Ed25519 private key
+  severity: critical
+  category: credential
+  mitre_attack: T1552.004
+- id: ECDSA_PRIVATE_KEY
+  regex: '[/\\][^/\\]*_ecdsa$'
+  message: ECDSA private key
+  severity: critical
+  category: credential
+  mitre_attack: T1552.004
+- id: GITHUB_CLI_CREDENTIALS
+  regex: '[/\\]\.gh[/\\]hosts\.yml$'
+  message: GitHub CLI credentials
+  severity: critical
+  category: credential
+  mitre_attack: T1552.001
+- id: GITHUB_CLI_CREDENTIALS_2
+  regex: '[/\\]\.config[/\\]gh[/\\]hosts\.yml$'
+  message: GitHub CLI credentials
+  severity: critical
+  category: credential
+  mitre_attack: T1552.001
+- id: HUB_CLI_CONFIG
+  regex: '[/\\]\.config[/\\]hub$'
+  message: Hub CLI config
+  severity: critical
+  category: credential
+  mitre_attack: T1552.001
+- id: GIT_CONFIG_MAY_CONTAIN_CREDENTIALS
+  regex: '[/\\]\.gitconfig$'
+  message: Git config (may contain credentials)
+  severity: critical
+  category: credential
+  mitre_attack: T1552.001
+- id: GIT_CREDENTIALS_FILE
+  regex: '[/\\]\.git-credentials$'
+  message: Git credentials file
+  severity: critical
+  category: credential
+  mitre_attack: T1552.001
+- id: MERCURIAL_CONFIG
+  regex: '[/\\]\.hgrc$'
+  message: Mercurial config
+  severity: critical
+  category: credential
+  mitre_attack: T1552.001
+- id: SVN_AUTH_DIRECTORY
+  regex: '[/\\]\.svn[/\\]auth[/\\]'
+  message: SVN auth directory
+  severity: critical
+  category: credential
+  mitre_attack: T1552.001
+- id: TRAVIS_CONFIG_MAY_HAVE_ENCRYPTED
+  regex: '[/\\]\.travis\.yml$'
+  message: Travis CI config (may have encrypted secrets)
+  severity: critical
+  category: credential
+  mitre_attack: T1552.001
+- id: CIRCLECI_CONFIG
+  regex: '[/\\]\.circleci[/\\]config\.yml$'
+  message: CircleCI config
+  severity: critical
+  category: credential
+  mitre_attack: T1552.001
+- id: WINDOWS_AWS_CREDENTIALS
+  regex: AppData[/\\]Roaming[/\\]\.aws[/\\]credentials$
+  message: Windows AWS credentials
+  severity: critical
+  category: credential
+  mitre_attack: T1552.005
+- id: WINDOWS_GCP_CREDENTIALS
+  regex: AppData[/\\]Roaming[/\\]gcloud[/\\]credentials\.db$
+  message: Windows GCP credentials
+  severity: critical
+  category: credential
+  mitre_attack: T1552.005
+- id: WINDOWS_USER_REGISTRY_HIVE
+  regex: '[/\\]NTUSER\.DAT$'
+  message: Windows user registry hive
+  severity: critical
+  category: credential
+  mitre_attack: T1552.001
+- id: WINDOWS_SAM_DATABASE
+  regex: '[/\\]SAM$'
+  message: Windows SAM database
+  severity: critical
+  category: credential
+  mitre_attack: T1552.001
+- id: WINDOWS_SYSTEM_REGISTRY
+  regex: '[/\\]SYSTEM$'
+  message: Windows SYSTEM registry
+  severity: critical
+  category: credential
+  mitre_attack: T1552.001
+- id: WINDOWS_SECURITY_REGISTRY
+  regex: '[/\\]SECURITY$'
+  message: Windows SECURITY registry
+  severity: critical
+  category: credential
+  mitre_attack: T1552.001
+- id: MACOS_KEYCHAIN_FILES
+  regex: '[/\\]Library[/\\]Keychains[/\\]'
+  message: macOS keychain files
+  severity: critical
+  category: credential
+  mitre_attack: T1552.004
+- id: MACOS_PRIVACY_DATABASE
+  regex: '[/\\]com\.apple\.TCC[/\\]TCC\.db$'
+  message: macOS privacy database
+  severity: critical
+  category: credential
+  mitre_attack: T1552.001
+- id: CHROME_SAVED_PASSWORDS
+  regex: '[/\\]Chrome[/\\].*[/\\]Login Data$'
+  message: Chrome saved passwords
+  severity: critical
+  category: credential
+  mitre_attack: T1552.001
+- id: FIREFOX_SAVED_PASSWORDS
+  regex: '[/\\]Firefox[/\\].*[/\\]logins\.json$'
+  message: Firefox saved passwords
+  severity: critical
+  category: credential
+  mitre_attack: T1552.001
+- id: MACOS_AUTHORIZATION_DATABASE
+  regex: '[/\\]etc[/\\]authorization$'
+  message: macOS authorization database
+  severity: critical
+  category: credential
+  mitre_attack: T1552.001
+- id: DIRECTORY_SERVICES_DATABASE
+  regex: '[/\\]var[/\\]db[/\\]dslocal[/\\]'
+  message: Directory services database
+  severity: critical
+  category: credential
+  mitre_attack: T1552.001

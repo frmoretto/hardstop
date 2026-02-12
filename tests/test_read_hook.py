@@ -43,14 +43,16 @@ class TestDangerousPatterns(TestCase):
     """Test detection of dangerous credential files."""
 
     def test_ssh_private_key_rsa(self):
-        is_dangerous, reason = check_dangerous_patterns("/home/user/.ssh/id_rsa")
+        is_dangerous, pattern_data = check_dangerous_patterns("/home/user/.ssh/id_rsa")
         self.assertTrue(is_dangerous)
-        self.assertIn("SSH", reason)
+        self.assertIsNotNone(pattern_data)
+        self.assertIn("SSH", pattern_data['message'])
 
     def test_ssh_private_key_ed25519(self):
-        is_dangerous, reason = check_dangerous_patterns("/home/user/.ssh/id_ed25519")
+        is_dangerous, pattern_data = check_dangerous_patterns("/home/user/.ssh/id_ed25519")
         self.assertTrue(is_dangerous)
-        self.assertIn("SSH", reason)
+        self.assertIsNotNone(pattern_data)
+        self.assertIn("SSH", pattern_data['message'])
 
     def test_ssh_pem_file(self):
         is_dangerous, reason = check_dangerous_patterns("/home/user/.ssh/mykey.pem")
@@ -61,18 +63,20 @@ class TestDangerousPatterns(TestCase):
         self.assertTrue(is_dangerous)
 
     def test_aws_credentials(self):
-        is_dangerous, reason = check_dangerous_patterns("/home/user/.aws/credentials")
+        is_dangerous, pattern_data = check_dangerous_patterns("/home/user/.aws/credentials")
         self.assertTrue(is_dangerous)
-        self.assertIn("AWS", reason)
+        self.assertIsNotNone(pattern_data)
+        self.assertIn("AWS", pattern_data['message'])
 
     def test_aws_config(self):
         is_dangerous, reason = check_dangerous_patterns("/home/user/.aws/config")
         self.assertTrue(is_dangerous)
 
     def test_env_file(self):
-        is_dangerous, reason = check_dangerous_patterns("/project/.env")
+        is_dangerous, pattern_data = check_dangerous_patterns("/project/.env")
         self.assertTrue(is_dangerous)
-        self.assertIn("Environment", reason)
+        self.assertIsNotNone(pattern_data)
+        self.assertIn("Environment", pattern_data['message'])
 
     def test_env_production(self):
         is_dangerous, reason = check_dangerous_patterns("/project/.env.production")
@@ -83,9 +87,10 @@ class TestDangerousPatterns(TestCase):
         self.assertTrue(is_dangerous)
 
     def test_kube_config(self):
-        is_dangerous, reason = check_dangerous_patterns("/home/user/.kube/config")
+        is_dangerous, pattern_data = check_dangerous_patterns("/home/user/.kube/config")
         self.assertTrue(is_dangerous)
-        self.assertIn("Kubernetes", reason)
+        self.assertIsNotNone(pattern_data)
+        self.assertIn("Kubernetes", pattern_data['message'])
 
     def test_docker_config(self):
         is_dangerous, reason = check_dangerous_patterns("/home/user/.docker/config.json")

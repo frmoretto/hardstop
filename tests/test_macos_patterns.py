@@ -21,9 +21,10 @@ class TestMacOSDangerousPatterns(unittest.TestCase):
     # === DISK UTILITY ===
 
     def test_diskutil_erase_disk(self):
-        dangerous, msg = check_dangerous("diskutil eraseDisk JHFS+ NewDisk disk2")
+        dangerous, pattern_data = check_dangerous("diskutil eraseDisk JHFS+ NewDisk disk2")
         self.assertTrue(dangerous)
-        self.assertIn("disk", msg.lower())
+        self.assertIsNotNone(pattern_data)
+        self.assertIn("disk", pattern_data['message'].lower())
 
     def test_diskutil_erase_volume(self):
         dangerous, msg = check_dangerous("diskutil eraseVolume JHFS+ NewVolume disk2s1")
@@ -48,14 +49,16 @@ class TestMacOSDangerousPatterns(unittest.TestCase):
     # === KEYCHAIN ACCESS ===
 
     def test_security_delete_keychain(self):
-        dangerous, msg = check_dangerous("security delete-keychain login.keychain")
+        dangerous, pattern_data = check_dangerous("security delete-keychain login.keychain")
         self.assertTrue(dangerous)
-        self.assertIn("keychain", msg.lower())
+        self.assertIsNotNone(pattern_data)
+        self.assertIn("keychain", pattern_data['message'].lower())
 
     def test_security_dump_keychain(self):
-        dangerous, msg = check_dangerous("security dump-keychain -d login.keychain")
+        dangerous, pattern_data = check_dangerous("security dump-keychain -d login.keychain")
         self.assertTrue(dangerous)
-        self.assertIn("keychain", msg.lower())
+        self.assertIsNotNone(pattern_data)
+        self.assertIn("keychain", pattern_data['message'].lower())
 
     def test_security_find_generic_password(self):
         dangerous, msg = check_dangerous("security find-generic-password -w -s 'MyService'")
@@ -104,9 +107,10 @@ class TestMacOSDangerousPatterns(unittest.TestCase):
     # === SYSTEM SECURITY ===
 
     def test_spctl_disable(self):
-        dangerous, msg = check_dangerous("spctl --master-disable")
+        dangerous, pattern_data = check_dangerous("spctl --master-disable")
         self.assertTrue(dangerous)
-        self.assertIn("gatekeeper", msg.lower())
+        self.assertIsNotNone(pattern_data)
+        self.assertIn("gatekeeper", pattern_data['message'].lower())
 
     def test_csrutil_disable(self):
         dangerous, msg = check_dangerous("csrutil disable")
@@ -133,9 +137,10 @@ class TestMacOSDangerousPatterns(unittest.TestCase):
     # === PERSISTENCE ===
 
     def test_launchctl_load_daemon(self):
-        dangerous, msg = check_dangerous("launchctl load /Library/LaunchDaemons/evil.plist")
+        dangerous, pattern_data = check_dangerous("launchctl load /Library/LaunchDaemons/evil.plist")
         self.assertTrue(dangerous)
-        self.assertIn("persistence", msg.lower())
+        self.assertIsNotNone(pattern_data)
+        self.assertIn("persistence", pattern_data['message'].lower())
 
     def test_launchctl_unload_apple(self):
         dangerous, msg = check_dangerous("launchctl unload /System/Library/LaunchDaemons/com.apple.mDNSResponder.plist")
@@ -195,9 +200,10 @@ class TestMacOSReadPatterns(unittest.TestCase):
     """Test macOS-specific dangerous read patterns."""
 
     def test_keychain_file(self):
-        dangerous, msg = check_dangerous_read("/Users/test/Library/Keychains/login.keychain-db")
+        dangerous, pattern_data = check_dangerous_read("/Users/test/Library/Keychains/login.keychain-db")
         self.assertTrue(dangerous)
-        self.assertIn("keychain", msg.lower())
+        self.assertIsNotNone(pattern_data)
+        self.assertIn("keychain", pattern_data['message'].lower())
 
     def test_tcc_database(self):
         dangerous, msg = check_dangerous_read("/Users/test/Library/Application Support/com.apple.TCC/TCC.db")
