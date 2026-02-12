@@ -31,6 +31,7 @@ const result = checkBashDangerous('rm -rf ~/');
 [![License](https://img.shields.io/badge/license-CC--BY--4.0-blue.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
 [![Platform](https://img.shields.io/badge/platform-macOS_%7C_Linux_%7C_Windows-lightgrey)](https://github.com/frmoretto/hardstop)
+[![SLSA Provenance](https://img.shields.io/badge/SLSA-Build_Provenance-green?logo=sigstore)](https://github.com/frmoretto/hardstop/attestations)
 
 [Installation](#-installation) • [How It Works](#%EF%B8%8F-how-it-works) • [Commands](#%EF%B8%8F-controls) • [Report Issue](https://github.com/frmoretto/hardstop/issues)
 
@@ -329,6 +330,14 @@ Hardstop is a robust safety net, but it is **not a guarantee**.
 **You should never blindly trust any security tool—including this one.**
 
 Before installing Hardstop, we encourage you to review the code yourself.
+
+### Verify Build Provenance
+
+Every release tarball is signed with [Sigstore](https://www.sigstore.dev/) via GitHub's build provenance attestation. Verify that a package was built from this repo's CI:
+
+```bash
+gh attestation verify hardstop-*.tgz --repo frmoretto/hardstop
+```
 
 ### Quick Code Review with GitIngest
 
