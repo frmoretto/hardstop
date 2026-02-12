@@ -1,6 +1,6 @@
 {
   "name": "hardstop",
-  "version": "1.4.0",
+  "version": "1.4.1",
   "description": "Pre-execution safety layer for Claude Code - blocks dangerous commands before they run",
   "keywords": [
     "claude-code",
@@ -53,7 +53,8 @@
     "skills/",
     "LICENSE",
     "README.md",
-    "CHANGELOG.md"
+    "CHANGELOG.md",
+    "install.md"
   ],
   "engines": {
     "node": ">=16.7.0"
