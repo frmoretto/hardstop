@@ -33,6 +33,9 @@ def temp_session_dir(tmp_path, monkeypatch):
     if 'HARDSTOP_SESSION_ID' in os.environ:
         del os.environ['HARDSTOP_SESSION_ID']
 
+    # Reset singleton so each test gets a fresh tracker
+    monkeypatch.setattr(session_tracker, '_tracker', None)
+
     return test_dir
 
 
