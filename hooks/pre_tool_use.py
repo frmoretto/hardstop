@@ -441,6 +441,29 @@ def split_chained_commands(command: str) -> List[str]:
     return commands if commands else [command]
 
 
+# === SELF-EXEMPTION ===
+
+def _is_hardstop_command(command: str) -> bool:
+    """Check if command is a HardStop self-management invocation.
+
+    Detects python calls to hs_cmd.py (the HardStop control script).
+    Rejects chained commands to prevent bypass attacks like:
+        python evil.py && python hs_cmd.py skip
+    """
+    parts = split_chained_commands(command)
+    if len(parts) != 1:
+        return False
+    cmd = parts[0].strip()
+    tokens = cmd.split()
+    if len(tokens) < 2:
+        return False
+    # First token must be a python executable
+    if 'python' not in tokens[0].lower():
+        return False
+    # Must reference hs_cmd.py
+    return any('hs_cmd.py' in t for t in tokens[1:])
+
+
 # === PATTERN MATCHING ===
 
 def check_dangerous(command: str) -> Tuple[bool, Optional[Dict]]:
@@ -838,6 +861,11 @@ def main():
         else:
             print("⏭️  Safety check skipped (last skip, protection resumed)", file=sys.stderr)
         sys.exit(0)
+
+    # === SELF-EXEMPTION: HardStop's own commands always pass ===
+    if _is_hardstop_command(command):
+        log_decision(command, "ALLOW", "HardStop self-management", "self", cwd)
+        allow_command("HardStop self-management", command, "self", cwd, silent=True)
 
     # === SPECIAL CASE: Uninstall script detection ===
     # Show friendly confirmation message before generic blocking

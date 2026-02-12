@@ -128,6 +128,54 @@ class TestAllowCommand(TestCase):
         self.assertEqual(stderr.getvalue(), "")
 
 
+class TestIsHardstopCommand(TestCase):
+    """Test _is_hardstop_command() self-exemption detection."""
+
+    def test_simple_skip(self):
+        self.assertTrue(pre_tool_use._is_hardstop_command("python hs_cmd.py skip"))
+
+    def test_full_path_unix(self):
+        self.assertTrue(pre_tool_use._is_hardstop_command(
+            "python ~/.claude/plugins/hs/commands/hs_cmd.py skip"))
+
+    def test_full_path_windows(self):
+        self.assertTrue(pre_tool_use._is_hardstop_command(
+            r"python C:\Users\franz\.claude\plugins\hs\commands\hs_cmd.py skip"))
+
+    def test_python3(self):
+        self.assertTrue(pre_tool_use._is_hardstop_command("python3 /path/to/hs_cmd.py status"))
+
+    def test_python_exe_full_path(self):
+        self.assertTrue(pre_tool_use._is_hardstop_command(
+            r"C:\Python313\python.exe hs_cmd.py on"))
+
+    def test_quoted_path(self):
+        self.assertTrue(pre_tool_use._is_hardstop_command(
+            'python "~/.claude/plugins/hs/commands/hs_cmd.py" skip'))
+
+    def test_no_args(self):
+        self.assertTrue(pre_tool_use._is_hardstop_command("python hs_cmd.py"))
+
+    def test_rejects_non_python(self):
+        self.assertFalse(pre_tool_use._is_hardstop_command("rm hs_cmd.py"))
+
+    def test_rejects_chained(self):
+        self.assertFalse(pre_tool_use._is_hardstop_command(
+            "python evil.py && python hs_cmd.py skip"))
+
+    def test_rejects_no_hs_cmd(self):
+        self.assertFalse(pre_tool_use._is_hardstop_command("python evil.py"))
+
+    def test_rejects_echo(self):
+        self.assertFalse(pre_tool_use._is_hardstop_command("echo hs_cmd.py"))
+
+    def test_rejects_empty(self):
+        self.assertFalse(pre_tool_use._is_hardstop_command(""))
+
+    def test_rejects_single_token(self):
+        self.assertFalse(pre_tool_use._is_hardstop_command("python"))
+
+
 class TestCheckUninstallScript(TestCase):
     """Test check_uninstall_script()."""
 
@@ -766,6 +814,21 @@ class TestMainFunction(TestCase):
         })
         self.assertEqual(exit_code, 0)
         self.assertIn("skipped", stderr.lower())
+
+    def test_hardstop_self_exemption(self):
+        """Covers lines 867-868: hs_cmd.py commands bypass all checks."""
+        stdout, _, exit_code = self._run_main({
+            "tool_input": {"command": 'python "${CLAUDE_PLUGIN_ROOT}/commands/hs_cmd.py" skip'},
+            "cwd": "/tmp"
+        })
+        self.assertEqual(exit_code, 0)
+        # Should NOT produce a deny decision
+        if stdout.strip():
+            data = json.loads(stdout)
+            self.assertNotEqual(
+                data.get("hookSpecificOutput", {}).get("permissionDecision"),
+                "deny"
+            )
 
     def test_multi_skip_shows_remaining(self):
         pre_tool_use.SKIP_FILE.write_text("3")
