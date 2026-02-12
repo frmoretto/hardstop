@@ -112,6 +112,11 @@ class TestCalculateRiskLevel:
         assert calculate_risk_level(74) == "high"
         assert calculate_risk_level(75) == "critical"
 
+    def test_negative_score_returns_unknown(self):
+        """Test that negative score falls through to unknown."""
+        assert calculate_risk_level(-1) == "unknown"
+        assert calculate_risk_level(-100) == "unknown"
+
 
 class TestGetSeverityWeight:
     """Test severity weight retrieval."""

@@ -261,6 +261,23 @@ class TestPersistence:
         assert tracker2.get_risk_score() == 0
 
 
+class TestSaveSessionError:
+    """Test _save_session error handling."""
+
+    def test_save_session_io_error(self, tracker, temp_session_dir):
+        """Test that IOError during _save_session is handled gracefully (lines 94-95)."""
+        pattern = {'severity': 'high', 'message': 'Test'}
+
+        # Mock open to raise IOError during save
+        with patch("builtins.open", side_effect=IOError("disk full")):
+            # record_block calls _save_session internally; should not crash
+            tracker.record_block("cmd", pattern)
+
+        # Data should still be updated in memory
+        assert tracker.get_risk_score() == 15
+        assert tracker.get_blocked_count() == 1
+
+
 class TestSessionReset:
     """Test session reset functionality."""
 
