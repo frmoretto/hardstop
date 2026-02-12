@@ -367,7 +367,14 @@ class TestFindClaudeCli(TestCase):
 
 
 class TestAskClaude(TestCase):
-    """Test ask_claude() with mocked subprocess."""
+    """Test ask_claude() with mocked subprocess.
+
+    All tests that mock subprocess.run also mock _build_claude_exec to prevent
+    platform.system() from calling subprocess internally on Windows (Python 3.10+
+    routes subprocess.check_output through subprocess.run).
+    """
+
+    _MOCK_EXEC = ["claude", "--print", "--model", "haiku"]
 
     def test_cli_unavailable_blocks(self):
         with patch.object(pre_tool_use, "find_claude_cli", return_value=None):
@@ -388,6 +395,7 @@ class TestAskClaude(TestCase):
         mock_result.stdout = '{"verdict": "ALLOW", "reason": "Safe command"}'
 
         with patch.object(pre_tool_use, "find_claude_cli", return_value="/usr/bin/claude"), \
+             patch.object(pre_tool_use, "_build_claude_exec", return_value=self._MOCK_EXEC), \
              patch.object(pre_tool_use.subprocess, "run", return_value=mock_result):
             verdict, reason = pre_tool_use.ask_claude("ls", "/tmp")
             self.assertEqual(verdict, "ALLOW")
@@ -398,6 +406,7 @@ class TestAskClaude(TestCase):
         mock_result.stdout = '{"verdict": "BLOCK", "reason": "Dangerous operation"}'
 
         with patch.object(pre_tool_use, "find_claude_cli", return_value="/usr/bin/claude"), \
+             patch.object(pre_tool_use, "_build_claude_exec", return_value=self._MOCK_EXEC), \
              patch.object(pre_tool_use.subprocess, "run", return_value=mock_result):
             verdict, reason = pre_tool_use.ask_claude("rm -rf /", "/tmp")
             self.assertEqual(verdict, "BLOCK")
@@ -407,6 +416,7 @@ class TestAskClaude(TestCase):
         mock_result.returncode = 1
 
         with patch.object(pre_tool_use, "find_claude_cli", return_value="/usr/bin/claude"), \
+             patch.object(pre_tool_use, "_build_claude_exec", return_value=self._MOCK_EXEC), \
              patch.object(pre_tool_use.subprocess, "run", return_value=mock_result):
             verdict, _ = pre_tool_use.ask_claude("test", "/tmp")
             self.assertEqual(verdict, "BLOCK")
@@ -417,6 +427,7 @@ class TestAskClaude(TestCase):
         mock_result.returncode = 1
 
         with patch.object(pre_tool_use, "find_claude_cli", return_value="/usr/bin/claude"), \
+             patch.object(pre_tool_use, "_build_claude_exec", return_value=self._MOCK_EXEC), \
              patch.object(pre_tool_use.subprocess, "run", return_value=mock_result), \
              patch.object(pre_tool_use, "FAIL_CLOSED", False):
             verdict, _ = pre_tool_use.ask_claude("test", "/tmp")
@@ -428,6 +439,7 @@ class TestAskClaude(TestCase):
         mock_result.stdout = "I have no idea what to say about this"
 
         with patch.object(pre_tool_use, "find_claude_cli", return_value="/usr/bin/claude"), \
+             patch.object(pre_tool_use, "_build_claude_exec", return_value=self._MOCK_EXEC), \
              patch.object(pre_tool_use.subprocess, "run", return_value=mock_result):
             verdict, _ = pre_tool_use.ask_claude("test", "/tmp")
             self.assertEqual(verdict, "BLOCK")
@@ -439,6 +451,7 @@ class TestAskClaude(TestCase):
         mock_result.stdout = "I have no idea"
 
         with patch.object(pre_tool_use, "find_claude_cli", return_value="/usr/bin/claude"), \
+             patch.object(pre_tool_use, "_build_claude_exec", return_value=self._MOCK_EXEC), \
              patch.object(pre_tool_use.subprocess, "run", return_value=mock_result), \
              patch.object(pre_tool_use, "FAIL_CLOSED", False):
             verdict, _ = pre_tool_use.ask_claude("test", "/tmp")
@@ -446,6 +459,7 @@ class TestAskClaude(TestCase):
 
     def test_cli_timeout_blocks(self):
         with patch.object(pre_tool_use, "find_claude_cli", return_value="/usr/bin/claude"), \
+             patch.object(pre_tool_use, "_build_claude_exec", return_value=self._MOCK_EXEC), \
              patch.object(pre_tool_use.subprocess, "run", side_effect=subprocess.TimeoutExpired("claude", 15)):
             verdict, reason = pre_tool_use.ask_claude("test", "/tmp")
             self.assertEqual(verdict, "BLOCK")
@@ -454,6 +468,7 @@ class TestAskClaude(TestCase):
     def test_cli_timeout_fail_open(self):
         """Covers line 711: FAIL_CLOSED=False on timeout."""
         with patch.object(pre_tool_use, "find_claude_cli", return_value="/usr/bin/claude"), \
+             patch.object(pre_tool_use, "_build_claude_exec", return_value=self._MOCK_EXEC), \
              patch.object(pre_tool_use.subprocess, "run", side_effect=subprocess.TimeoutExpired("claude", 15)), \
              patch.object(pre_tool_use, "FAIL_CLOSED", False):
             verdict, _ = pre_tool_use.ask_claude("test", "/tmp")
@@ -461,6 +476,7 @@ class TestAskClaude(TestCase):
 
     def test_cli_subprocess_error_blocks(self):
         with patch.object(pre_tool_use, "find_claude_cli", return_value="/usr/bin/claude"), \
+             patch.object(pre_tool_use, "_build_claude_exec", return_value=self._MOCK_EXEC), \
              patch.object(pre_tool_use.subprocess, "run", side_effect=subprocess.SubprocessError("fail")):
             verdict, _ = pre_tool_use.ask_claude("test", "/tmp")
             self.assertEqual(verdict, "BLOCK")
@@ -468,6 +484,7 @@ class TestAskClaude(TestCase):
     def test_cli_subprocess_error_fail_open(self):
         """Covers line 717: FAIL_CLOSED=False on SubprocessError."""
         with patch.object(pre_tool_use, "find_claude_cli", return_value="/usr/bin/claude"), \
+             patch.object(pre_tool_use, "_build_claude_exec", return_value=self._MOCK_EXEC), \
              patch.object(pre_tool_use.subprocess, "run", side_effect=subprocess.SubprocessError("fail")), \
              patch.object(pre_tool_use, "FAIL_CLOSED", False):
             verdict, _ = pre_tool_use.ask_claude("test", "/tmp")
@@ -475,6 +492,7 @@ class TestAskClaude(TestCase):
 
     def test_cli_os_error_blocks(self):
         with patch.object(pre_tool_use, "find_claude_cli", return_value="/usr/bin/claude"), \
+             patch.object(pre_tool_use, "_build_claude_exec", return_value=self._MOCK_EXEC), \
              patch.object(pre_tool_use.subprocess, "run", side_effect=OSError("not found")):
             verdict, _ = pre_tool_use.ask_claude("test", "/tmp")
             self.assertEqual(verdict, "BLOCK")
@@ -482,6 +500,7 @@ class TestAskClaude(TestCase):
     def test_cli_os_error_fail_open(self):
         """Covers line 723: FAIL_CLOSED=False on OSError."""
         with patch.object(pre_tool_use, "find_claude_cli", return_value="/usr/bin/claude"), \
+             patch.object(pre_tool_use, "_build_claude_exec", return_value=self._MOCK_EXEC), \
              patch.object(pre_tool_use.subprocess, "run", side_effect=OSError("not found")), \
              patch.object(pre_tool_use, "FAIL_CLOSED", False):
             verdict, _ = pre_tool_use.ask_claude("test", "/tmp")
