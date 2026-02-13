@@ -1,37 +1,16 @@
 # 🛑 Hardstop
 
-Pre-execution safety validation for AI coding agents. Validates every shell command against 428 security patterns before execution — blocking destructive operations, credential theft, infrastructure teardown, and prompt injection. Fail-closed: blocks by default when uncertain.
-
-## 🚀 Quick Start
-
-**Install as Claude Code / Cowork plugin:**
-```bash
-npx hardstop install
-```
-
-Or clone and install manually:
-```bash
-git clone https://github.com/frmoretto/hardstop.git && cd hardstop && ./install.sh
-```
-
-**Pattern library standalone (npm):**
-```bash
-npm install hardstop-patterns
-```
-
-```js
-const { checkBashDangerous } = require('hardstop-patterns');
-const result = checkBashDangerous('rm -rf ~/');
-// { matched: true, pattern: { id: 'DEL-001', message: 'Deletes home directory', ... } }
-```
-
 [![npm version](https://img.shields.io/npm/v/hardstop.svg)](https://www.npmjs.com/package/hardstop)
+[![npm downloads](https://img.shields.io/npm/dm/hardstop.svg)](https://www.npmjs.com/package/hardstop)
+[![license](https://img.shields.io/npm/l/hardstop.svg)](LICENSE)
+[![node](https://img.shields.io/node/v/hardstop.svg)](https://www.npmjs.com/package/hardstop)
 [![Tests](https://github.com/frmoretto/hardstop/workflows/Tests/badge.svg)](https://github.com/frmoretto/hardstop/actions/workflows/test.yml)
 [![codecov](https://codecov.io/gh/frmoretto/hardstop/branch/main/graph/badge.svg)](https://codecov.io/gh/frmoretto/hardstop)
-[![License](https://img.shields.io/badge/license-CC--BY--4.0-blue.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
 [![Platform](https://img.shields.io/badge/platform-macOS_%7C_Linux_%7C_Windows-lightgrey)](https://github.com/frmoretto/hardstop)
 [![SLSA Provenance](https://img.shields.io/badge/SLSA-Build_Provenance-green?logo=sigstore)](https://github.com/frmoretto/hardstop/attestations)
+
+Pre-execution safety validation for AI coding agents. Validates every shell command against 428 security patterns before execution — blocking destructive operations, credential theft, infrastructure teardown, and prompt injection. Fail-closed: blocks by default when uncertain.
 
 [Installation](#-installation) • [How It Works](#%EF%B8%8F-how-it-works) • [Commands](#%EF%B8%8F-controls) • [Report Issue](https://github.com/frmoretto/hardstop/issues)
 
