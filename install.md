@@ -85,5 +85,5 @@ Windows: `cd hardstop && powershell -ExecutionPolicy Bypass -File uninstall.ps1`
 ## More information
 
 - Repository: https://github.com/frmoretto/hardstop
-- Pattern library (npm): https://www.npmjs.com/package/hardstop-patterns
+- Pattern library: [hardstop-patterns](https://www.npmjs.com/package/hardstop-patterns) ([GitHub](https://github.com/frmoretto/hardstop-patterns))
 - Issues: https://github.com/frmoretto/hardstop/issues

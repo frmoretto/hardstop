@@ -12,6 +12,8 @@
 
 Pre-execution safety validation for AI coding agents. Validates every shell command against 428 security patterns before execution — blocking destructive operations, credential theft, infrastructure teardown, and prompt injection. Fail-closed: blocks by default when uncertain.
 
+**Ecosystem:** The detection patterns are published separately as [hardstop-patterns](https://www.npmjs.com/package/hardstop-patterns) ([GitHub](https://github.com/frmoretto/hardstop-patterns)) — reusable in any Node.js tool.
+
 [Installation](#-installation) • [How It Works](#%EF%B8%8F-how-it-works) • [Commands](#%EF%B8%8F-controls) • [Report Issue](https://github.com/frmoretto/hardstop/issues)
 
 ---
