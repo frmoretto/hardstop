@@ -46,7 +46,7 @@ $ Read ~/.aws/credentials
 
 # You check the status
 $ /hs status
-Hardstop v1.4.0
+Hardstop v1.4.2
   Status:      🟢 Enabled
   Session Risk: Moderate (35/100)
   Blocked: 2 commands this session
@@ -154,7 +154,7 @@ powershell -ExecutionPolicy Bypass -File install.ps1
 
 You should see:
 ```
-Hardstop v1.4.0
+Hardstop v1.4.2
   Status:      🟢 Enabled
   Session Risk: Low (0/100)
   262 patterns loaded (MITRE ATT&CK mapped)

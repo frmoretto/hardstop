@@ -2,6 +2,47 @@
 
 All notable changes to Hardstop will be documented in this file.
 
+## [1.4.2] - 2026-02-14
+
+### UX Workflow Enhancement & Ecosystem Cross-Links
+
+Improves the blocked command workflow and adds ecosystem discoverability.
+
+### Added
+- **hooks/pre_tool_use.py**: `suggestedAction` field in JSON output when blocking commands
+  - Provides structured workflow guidance: `{workflow: "bypass", command: "/hs skip", thenRetry: true, userPrompt: "..."}`
+  - Enables Claude to automatically suggest the bypass workflow when commands are blocked
+- **skills/hs/SKILL.md**: "WHEN COMMANDS ARE BLOCKED" section with explicit 5-step workflow
+  - STOP → EXPLAIN → ASK → IF YES: Run /hs skip first, then retry → IF NO: Suggest safer alternative
+  - Trains Claude on the proper bypass workflow pattern
+- **README.md, package.json**: Ecosystem cross-links to hardstop-patterns package
+- **install.md**: Enhanced pattern library reference with both npm and GitHub links
+
+### Fixed
+- **hooks/pre_tool_use.py**: HardStop's own commands (`/hs skip`, `/hs status`, etc.) now bypass the safety hook (closes #2)
+  - Prevents infinite recursion when Claude tries to run HardStop commands
+  - Self-exemption via `_is_hardstop_command()` function
+
+### Changed
+- **Git tags**: Corrected v1.4.1 tag to point to actual npm 1.4.1 publish (fa06e22)
+  - Previously pointed to ecosystem cross-links commit (bc31ba4)
+  - Aligns git history with published npm package
+
+---
+
+## [1.4.1] - 2026-02-12
+
+### Agent Discovery Enhancement
+
+Adds install.md to npm package for better agent discoverability.
+
+### Changed
+- **package.json**: Added `install.md` to npm package files
+  - Enables agent discovery systems to find installation instructions
+  - Improves package metadata for AI-assisted discovery
+
+---
+
 ## [1.4.0] - 2026-02-11
 
 ### Installation & Naming Standardization

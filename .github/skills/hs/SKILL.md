@@ -12,7 +12,7 @@ triggers:
   - check command safety
 ---
 
-# Hardstop Skill v1.3
+# Hardstop Skill v1.4
 
 > **Note:** This skill complements the Hardstop plugin. The plugin provides deterministic protection via hooks; this skill provides LLM-level awareness for platforms without hook support.
 
@@ -34,6 +34,34 @@ triggers:
 ```
 
 **NEVER skip this protocol. NEVER proceed on DANGEROUS without explicit user approval.**
+
+---
+
+## WHEN COMMANDS ARE BLOCKED
+
+**If you see a "🛑 BLOCKED" message from the Hardstop hook:**
+
+1. **STOP** - Do not proceed with the command
+2. **EXPLAIN** - Tell the user why it was blocked (the reason is in the message)
+3. **ASK** - "This command was blocked for safety. Would you like me to bypass the check with /hs skip and retry?"
+4. **IF USER SAYS YES:**
+   - Run the `/hs skip` command first
+   - Then retry the original blocked command
+5. **IF USER SAYS NO:**
+   - Suggest a safer alternative approach
+   - Or ask what they were trying to accomplish
+
+**Example workflow:**
+```
+Claude: I'll run this command... [attempts risky command]
+Hook: 🛑 BLOCKED: Deletes home directory
+Claude: This command was blocked because it would delete your home directory.
+        Would you like me to bypass with /hs skip and retry? (Not recommended)
+User: No
+Claude: Good call. What were you trying to do? I can suggest a safer approach.
+```
+
+**Never bypass safety checks without user permission.**
 
 ---
 
@@ -477,6 +505,14 @@ If you need to read this file, use '/hs skip' first.
 
 ## Changelog
 
+### v1.4 (2026-02-14)
+- **NEW FEATURE:** Blocked Command Workflow — explicit instructions for handling blocked commands
+- Added "WHEN COMMANDS ARE BLOCKED" section with 5-step workflow
+  - STOP → EXPLAIN → ASK → IF YES: Run /hs skip first, then retry → IF NO: Suggest safer alternative
+- Added example workflow demonstrating the bypass process
+- Clarifies that bypassing safety checks requires user permission
+- Improves LLM understanding of the /hs skip workflow pattern
+
 ### v1.3 (2026-01-20)
 - **NEW FEATURE:** Read Tool Protection — blocks reading of credential files
 - Added Section 9: Read Tool Protection with DANGEROUS/SENSITIVE/SAFE patterns
@@ -529,7 +565,7 @@ Copy to your agent's skill/instruction directory.
 
 ---
 
-**Version:** 1.3
+**Version:** 1.4
 **Author:** Francesco Marinoni Moretto
 **License:** CC-BY-4.0
 **Repository:** https://github.com/frmoretto/hardstop

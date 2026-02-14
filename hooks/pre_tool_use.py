@@ -767,7 +767,13 @@ def block_command(message: str, command: str, layer: str, cwd: str, pattern_data
         "hookSpecificOutput": {
             "hookEventName": "PreToolUse",
             "permissionDecision": "deny",
-            "permissionDecisionReason": reason
+            "permissionDecisionReason": reason,
+            "suggestedAction": {
+                "workflow": "bypass",
+                "command": "/hs skip",
+                "thenRetry": True,
+                "userPrompt": "This command was blocked for safety. Should I bypass the check with /hs skip and retry?"
+            }
         }
     }
 
@@ -808,7 +814,13 @@ def check_uninstall_script(command: str) -> bool:
                 "hookSpecificOutput": {
                     "hookEventName": "PreToolUse",
                     "permissionDecision": "deny",
-                    "permissionDecisionReason": reason
+                    "permissionDecisionReason": reason,
+                    "suggestedAction": {
+                        "workflow": "uninstall",
+                        "command": "/hs skip",
+                        "thenRetry": True,
+                        "userPrompt": "You're about to uninstall Hardstop. Are you sure? I can run /hs skip to proceed."
+                    }
                 }
             }
             print(json.dumps(output))

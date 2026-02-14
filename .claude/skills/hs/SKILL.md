@@ -1,9 +1,18 @@
 ---
 name: hs
-description: "ACTIVATE THIS SKILL FOR ANY SHELL COMMAND OR FILE READ. Check curl, wget, rm, sudo, apt, dpkg, chmod, dd, format, powershell, bash, sh. Check pipe patterns like | sh or | bash. Check when user says sysadmin told me, Stack Overflow says, is this safe, can I run. Block reading of .env, .ssh, .aws, and credential files. This skill blocks dangerous commands and warns on risky ones. ALWAYS apply the safety protocol from this document before responding about any command."
+version: "1.3"
+description: "ACTIVATE THIS SKILL FOR ANY SHELL COMMAND OR FILE READ. Check curl, wget, rm, sudo, apt, dpkg, chmod, dd, format, powershell, bash, sh. Check pipe patterns like | sh or | bash. Check shell wrappers like bash -c, xargs, find -exec. Check cloud CLI (aws, gcloud, kubectl, terraform). Check when user says sysadmin told me, Stack Overflow says, is this safe, can I run. Block reading of .env, .ssh, .aws, and credential files. This skill blocks dangerous commands and warns on risky ones. ALWAYS apply the safety protocol from this document before responding about any command."
+author: Francesco Marinoni Moretto
+license: CC-BY-4.0
+triggers:
+  - hardstop
+  - safety check
+  - pre-execution check
+  - is this command safe
+  - check command safety
 ---
 
-# Hardstop Skill v1.3
+# Hardstop Skill v1.4
 
 > **Note:** This skill complements the Hardstop plugin. The plugin provides deterministic protection via hooks; this skill provides LLM-level awareness for platforms without hook support.
 
@@ -28,6 +37,34 @@ description: "ACTIVATE THIS SKILL FOR ANY SHELL COMMAND OR FILE READ. Check curl
 
 ---
 
+## WHEN COMMANDS ARE BLOCKED
+
+**If you see a "🛑 BLOCKED" message from the Hardstop hook:**
+
+1. **STOP** - Do not proceed with the command
+2. **EXPLAIN** - Tell the user why it was blocked (the reason is in the message)
+3. **ASK** - "This command was blocked for safety. Would you like me to bypass the check with /hs skip and retry?"
+4. **IF USER SAYS YES:**
+   - Run the `/hs skip` command first
+   - Then retry the original blocked command
+5. **IF USER SAYS NO:**
+   - Suggest a safer alternative approach
+   - Or ask what they were trying to accomplish
+
+**Example workflow:**
+```
+Claude: I'll run this command... [attempts risky command]
+Hook: 🛑 BLOCKED: Deletes home directory
+Claude: This command was blocked because it would delete your home directory.
+        Would you like me to bypass with /hs skip and retry? (Not recommended)
+User: No
+Claude: Good call. What were you trying to do? I can suggest a safer approach.
+```
+
+**Never bypass safety checks without user permission.**
+
+---
+
 ## 1. INSTANT BLOCK List
 
 **These patterns require IMMEDIATE STOP. No exceptions. No "let me just..."**
@@ -48,6 +85,30 @@ description: "ACTIVATE THIS SKILL FOR ANY SHELL COMMAND OR FILE READ. Check curl
 | `> /dev/sda` | Destroys disk |
 | `sudo rm -rf /` | Privileged system destruction |
 | `chmod -R 777 /` | World-writable system |
+
+#### Shell Wrappers (v1.2)
+
+| Pattern | Why |
+|---------|-----|
+| `bash -c "rm -rf ..."` | Hides recursive delete in shell wrapper |
+| `sh -c "... \| bash"` | Hides curl/wget pipe to shell |
+| `sudo bash -c "..."` | Elevated shell wrapper |
+| `xargs rm -rf` | Dynamic arguments to recursive delete |
+| `find ... -exec rm -rf` | find executing recursive delete |
+| `find ... -delete` | find with delete flag |
+
+#### Cloud CLI Destructive Operations (v1.2)
+
+| Pattern | Why |
+|---------|-----|
+| `aws s3 rm --recursive` | Deletes all S3 objects |
+| `aws ec2 terminate-instances` | Terminates EC2 instances |
+| `gcloud projects delete` | Deletes entire GCP project |
+| `kubectl delete namespace` | Deletes K8s namespace |
+| `terraform destroy` | Destroys all infrastructure |
+| `firebase firestore:delete --all-collections` | Wipes all Firestore data |
+| `redis-cli FLUSHALL` | Wipes all Redis data |
+| `DROP DATABASE` / `DROP TABLE` | SQL database destruction |
 
 #### Package Manager Force Operations
 
@@ -444,6 +505,14 @@ If you need to read this file, use '/hs skip' first.
 
 ## Changelog
 
+### v1.4 (2026-02-14)
+- **NEW FEATURE:** Blocked Command Workflow — explicit instructions for handling blocked commands
+- Added "WHEN COMMANDS ARE BLOCKED" section with 5-step workflow
+  - STOP → EXPLAIN → ASK → IF YES: Run /hs skip first, then retry → IF NO: Suggest safer alternative
+- Added example workflow demonstrating the bypass process
+- Clarifies that bypassing safety checks requires user permission
+- Improves LLM understanding of the /hs skip workflow pattern
+
 ### v1.3 (2026-01-20)
 - **NEW FEATURE:** Read Tool Protection — blocks reading of credential files
 - Added Section 9: Read Tool Protection with DANGEROUS/SENSITIVE/SAFE patterns
@@ -452,6 +521,13 @@ If you need to read this file, use '/hs skip' first.
 - Allows: Source code, documentation, `.env.example` templates
 - Added Read protection to Quick Reference Card
 - Updated skill description to include file read protection
+
+### v1.2 (2026-01-20)
+- Added Shell Wrapper detection patterns (bash -c, sh -c, sudo bash -c, xargs, find -exec)
+- Added Cloud CLI patterns (AWS, GCP, Firebase, Kubernetes, Terraform, Docker)
+- Added Database CLI patterns (Redis, MongoDB, PostgreSQL, MySQL)
+- Added Platform CLI patterns (Vercel, Netlify, Heroku, Fly.io, GitHub)
+- Added SQL destructive patterns (DROP, TRUNCATE, DELETE without WHERE)
 
 ### v1.1 (2025-01-18)
 - Added Package Manager Force Operations to INSTANT BLOCK
@@ -477,6 +553,9 @@ Add this file to your Project knowledge or copy the Quick Reference Card to your
 ### Claude Code (Optional)
 This skill is optional for Claude Code users who have the Hardstop plugin installed. The plugin provides deterministic blocking; this skill adds LLM-level awareness.
 
+### Other Platforms
+Copy to your agent's skill/instruction directory.
+
 ---
 
 ## Related
@@ -486,7 +565,7 @@ This skill is optional for Claude Code users who have the Hardstop plugin instal
 
 ---
 
-**Version:** 1.3
+**Version:** 1.4
 **Author:** Francesco Marinoni Moretto
 **License:** CC-BY-4.0
 **Repository:** https://github.com/frmoretto/hardstop
