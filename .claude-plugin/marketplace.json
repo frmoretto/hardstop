@@ -1,72 +1,38 @@
 {
-  "$schema": "https://claude.ai/schemas/plugin-manifest-v1.json",
   "name": "hardstop",
-  "version": "1.4.3",
-  "description": "Pre-execution safety layer that blocks dangerous shell commands and credential file reads using pattern matching + LLM analysis. Fail-closed design.",
-  "author": "Francesco Marinoni Moretto",
-  "license": "CC-BY-4.0",
-  "repository": "https://github.com/frmoretto/hardstop",
-  "homepage": "https://github.com/frmoretto/hardstop",
-  "keywords": [
-    "hardstop",
-    "safety",
-    "security",
-    "pre-execution",
-    "shell",
-    "bash",
-    "powershell",
-    "command-blocking",
-    "ai-safety",
-    "guardrails"
-  ],
-  "skills": [
-    {
-      "name": "hs",
-      "path": "skills/hs/SKILL.md",
-      "triggers": [
-        "hardstop",
-        "safety check",
-        "pre-execution check",
-        "is this command safe",
-        "check command safety"
-      ]
-    }
-  ],
-  "hooks": {
-    "PreToolUse": [
-      {
-        "matcher": "Bash",
-        "command": "python hooks/pre_tool_use.py",
-        "description": "Pre-execution safety verification for shell commands"
-      },
-      {
-        "matcher": "PowerShell",
-        "command": "python hooks/pre_tool_use.py",
-        "description": "Pre-execution safety verification for PowerShell commands"
-      },
-      {
-        "matcher": "Read",
-        "command": "python hooks/pre_read.py",
-        "description": "Pre-read credential file protection"
-      }
-    ]
+  "metadata": {
+    "description": "Pre-execution safety layer for Claude Code",
+    "version": "1.0.0"
   },
-  "commands": [
+  "owner": {
+    "name": "Francesco Marinoni Moretto",
+    "email": "contact@clarity-gate.org"
+  },
+  "plugins": [
     {
       "name": "hs",
-      "aliases": ["hardstop"],
-      "description": "Control Hardstop plugin",
-      "subcommands": [
-        {"name": "on", "description": "Enable protection"},
-        {"name": "off", "description": "Disable protection"},
-        {"name": "skip", "description": "Skip next N commands (default 1)"},
-        {"name": "status", "description": "Show current state"},
-        {"name": "log", "description": "View audit log"}
+      "source": "./",
+      "description": "Pre-execution safety layer that blocks dangerous shell commands and credential file reads using pattern matching + LLM analysis. Fail-closed design.",
+      "version": "1.4.3",
+      "author": {
+        "name": "Francesco Marinoni Moretto",
+        "email": "contact@clarity-gate.org"
+      },
+      "homepage": "https://github.com/frmoretto/hardstop",
+      "repository": "https://github.com/frmoretto/hardstop",
+      "license": "CC-BY-4.0",
+      "keywords": [
+        "safety",
+        "security",
+        "pre-execution",
+        "shell",
+        "bash",
+        "powershell",
+        "command-blocking",
+        "ai-safety",
+        "guardrails",
+        "fail-closed"
       ]
     }
-  ],
-  "compatibility": {
-    "claude-code": ">=1.0.0",
-    "claude-desktop": ">=1.0.0"
-  }
+  ]
 }

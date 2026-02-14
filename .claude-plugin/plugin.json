@@ -7,10 +7,7 @@
     "email": "contact@clarity-gate.org"
   },
   "homepage": "https://github.com/frmoretto/hardstop",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/frmoretto/hardstop.git"
-  },
+  "repository": "https://github.com/frmoretto/hardstop",
   "license": "CC-BY-4.0",
   "keywords": [
     "safety",
