@@ -1,6 +1,6 @@
 ---
 name: hs
-version: "1.3"
+version: "1.4"
 description: "ACTIVATE THIS SKILL FOR ANY SHELL COMMAND OR FILE READ. Check curl, wget, rm, sudo, apt, dpkg, chmod, dd, format, powershell, bash, sh. Check pipe patterns like | sh or | bash. Check shell wrappers like bash -c, xargs, find -exec. Check cloud CLI (aws, gcloud, kubectl, terraform). Check when user says sysadmin told me, Stack Overflow says, is this safe, can I run. Block reading of .env, .ssh, .aws, and credential files. This skill blocks dangerous commands and warns on risky ones. ALWAYS apply the safety protocol from this document before responding about any command."
 author: Francesco Marinoni Moretto
 license: CC-BY-4.0
