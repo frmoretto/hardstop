@@ -153,6 +153,11 @@ def cmd_status():
         except Exception:
             pass
 
+    # GitHub star CTA
+    print()
+    print("  ⭐ Enjoying Hardstop? Star us on GitHub!")
+    print("     https://github.com/frmoretto/hardstop")
+
 
 def cmd_log():
     """Show recent audit log entries."""

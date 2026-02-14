@@ -263,7 +263,7 @@ function getVersion() {
   } catch (e) {
     // Ignore errors
   }
-  return 'v1.4.2';
+  return 'v1.4.3';
 }
 
 // Main installation flow

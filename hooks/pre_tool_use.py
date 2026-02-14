@@ -788,6 +788,19 @@ def block_command(message: str, command: str, layer: str, cwd: str, pattern_data
         }
 
     print(json.dumps(output))
+
+    # Show first-block message (once per installation)
+    first_block_file = STATE_DIR / "first_block_shown"
+    if not first_block_file.exists():
+        try:
+            print("\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━", file=sys.stderr)
+            print("🎉 Hardstop just protected you from a dangerous command!", file=sys.stderr)
+            print("⭐ Enjoying it? Star us: https://github.com/frmoretto/hardstop", file=sys.stderr)
+            print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n", file=sys.stderr)
+            first_block_file.touch()
+        except:
+            pass  # Don't fail if we can't write
+
     sys.exit(0)
 
 

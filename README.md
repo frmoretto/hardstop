@@ -2,6 +2,7 @@
 
 [![npm version](https://img.shields.io/npm/v/hardstop.svg)](https://www.npmjs.com/package/hardstop)
 [![npm downloads](https://img.shields.io/npm/dm/hardstop.svg)](https://www.npmjs.com/package/hardstop)
+[![GitHub stars](https://img.shields.io/github/stars/frmoretto/hardstop?style=social)](https://github.com/frmoretto/hardstop/stargazers)
 [![license](https://img.shields.io/npm/l/hardstop.svg)](LICENSE)
 [![node](https://img.shields.io/node/v/hardstop.svg)](https://www.npmjs.com/package/hardstop)
 [![Tests](https://github.com/frmoretto/hardstop/workflows/Tests/badge.svg)](https://github.com/frmoretto/hardstop/actions/workflows/test.yml)
@@ -9,6 +10,8 @@
 [![Python](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
 [![Platform](https://img.shields.io/badge/platform-macOS_%7C_Linux_%7C_Windows-lightgrey)](https://github.com/frmoretto/hardstop)
 [![SLSA Provenance](https://img.shields.io/badge/SLSA-Build_Provenance-green?logo=sigstore)](https://github.com/frmoretto/hardstop/attestations)
+
+> 👉 **[⭐ Star on GitHub](https://github.com/frmoretto/hardstop)** if Hardstop keeps you safe!
 
 Pre-execution safety validation for AI coding agents. Validates every shell command against 428 security patterns before execution — blocking destructive operations, credential theft, infrastructure teardown, and prompt injection. Fail-closed: blocks by default when uncertain.
 
@@ -46,7 +49,7 @@ $ Read ~/.aws/credentials
 
 # You check the status
 $ /hs status
-Hardstop v1.4.2
+Hardstop v1.4.3
   Status:      🟢 Enabled
   Session Risk: Moderate (35/100)
   Blocked: 2 commands this session
@@ -154,7 +157,7 @@ powershell -ExecutionPolicy Bypass -File install.ps1
 
 You should see:
 ```
-Hardstop v1.4.2
+Hardstop v1.4.3
   Status:      🟢 Enabled
   Session Risk: Low (0/100)
   262 patterns loaded (MITRE ATT&CK mapped)

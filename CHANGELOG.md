@@ -2,6 +2,27 @@
 
 All notable changes to Hardstop will be documented in this file.
 
+## [1.4.3] - 2026-02-14
+
+### Growth Features
+
+Adds GitHub star calls-to-action at key user touchpoints.
+
+### Added
+- **bin/postinstall.js**: Post-install message with GitHub star CTA
+  - Shows after `npm install hardstop`
+  - Welcomes users and directs to quick start
+- **hooks/pre_tool_use.py**: First-block celebration message
+  - Shows once per installation after first blocked command
+  - "🎉 Hardstop just protected you!" with star link
+- **commands/hs_cmd.py**: GitHub star CTA in `/hs status` output
+  - Reminds users to star when checking status
+- **README.md**: GitHub stars badge and prominent CTA
+  - Social proof badge showing current star count
+  - "👉 Star on GitHub if Hardstop keeps you safe!"
+
+---
+
 ## [1.4.2] - 2026-02-14
 
 ### UX Workflow Enhancement & Ecosystem Cross-Links

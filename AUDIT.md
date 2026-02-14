@@ -3,7 +3,7 @@
 This document helps independent auditors verify Hardstop's security claims efficiently.
 
 **Target:** "Safe to install" rating
-**Version:** 1.4.2
+**Version:** 1.4.3
 **Last Updated:** 2026-01-31
 
 ---

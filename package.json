@@ -1,6 +1,6 @@
 {
   "name": "hardstop",
-  "version": "1.4.2",
+  "version": "1.4.3",
   "description": "Pre-execution safety layer for Claude Code - blocks dangerous commands before they run. Part of the Hardstop ecosystem.",
   "keywords": [
     "claude-code",
@@ -61,7 +61,7 @@
   },
   "scripts": {
     "test": "echo \"Use pytest for testing: cd hardstop && pytest tests/\"",
-    "postinstall": "echo \"Run 'npx hardstop install' to install the plugin\""
+    "postinstall": "node bin/postinstall.js"
   },
   "dependencies": {},
   "devDependencies": {}
