@@ -2,6 +2,19 @@
 
 All notable changes to Hardstop will be documented in this file.
 
+## [1.4.5] - 2026-02-17
+
+### Fixed
+- **package.json**: Include platform skill directories (`.claude/`, `.codex/`, `.github/skills/`) in npm package so users get skill files for all supported platforms
+- **package.json**: Exclude `__pycache__/` and `.pyc` files from npm package (was shipping 73KB of bytecode)
+- **.npmignore**: Allow `.github/skills/` through while still excluding `.github/workflows/`
+- **.claude/skills/hs/SKILL.md**: Fix frontmatter to use minimal format (name + description only) per Claude's requirements
+
+### Added
+- **CLAUDE.md**: Project guide with versioning docs, version bump checklist, CI overview, release workflow, and skill file documentation
+
+---
+
 ## [1.4.4] - 2026-02-17
 
 ### Fixed

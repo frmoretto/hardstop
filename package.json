@@ -1,6 +1,6 @@
 {
   "name": "hardstop",
-  "version": "1.4.4",
+  "version": "1.4.5",
   "description": "Pre-execution safety layer for Claude Code - blocks dangerous commands before they run. Part of the Hardstop ecosystem.",
   "keywords": [
     "claude-code",
@@ -46,7 +46,11 @@
   },
   "files": [
     ".claude-plugin/",
-    "hooks/",
+    ".claude/",
+    ".codex/",
+    ".github/skills/",
+    "hooks/*.py",
+    "hooks/*.json",
     "commands/",
     "patterns/",
     "bin/",

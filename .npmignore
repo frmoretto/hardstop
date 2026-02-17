@@ -1,16 +1,16 @@
 # Test files
 tests/
 *.pyc
-__pycache__
-**/__pycache__
-hooks/__pycache__
+**/*.pyc
+**/__pycache__/
 .pytest_cache/
 .coverage
 htmlcov/
 
 # Development files
 .git/
-.github/
+.github/workflows/
+.github/ISSUE_TEMPLATE/
 .vscode/
 *.swp
 *.swo
