@@ -40,6 +40,7 @@ bin/                # npm install scripts
 
 Also update:
 4. `CHANGELOG.md` — add entry at top with `## [x.y.z] - YYYY-MM-DD`
+5. Git tag — `git tag vX.Y.Z && git push origin vX.Y.Z`
 
 ## Running tests
 
