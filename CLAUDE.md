@@ -30,6 +30,26 @@ bin/                # npm install scripts
 .claude-plugin/     # Claude plugin metadata
 ```
 
+## Versioning
+
+There are two independent version numbers:
+
+- **Package version** (e.g. `1.4.4`) — the plugin/npm release. Uses semver with patch bumps. Lives in `package.json`, `plugin.json`, and `marketplace.json`. Bumped on every release.
+- **Skill version** (e.g. `1.4`) — the LLM skill spec in `skills/hs/SKILL.md`. Uses major.minor only. Bumped only when the safety protocol, risk levels, or block lists change meaningfully. A patch-level bugfix in the plugin does NOT require a skill version bump.
+
+### Skill file copies
+
+The skill exists in 4 locations for different platforms:
+
+| Path | Platform | Frontmatter |
+|------|----------|-------------|
+| `skills/hs/SKILL.md` | Canonical (agentskills.io) | Full (name, version, description, author, license, triggers) |
+| `.claude/skills/hs/SKILL.md` | Claude Desktop/Code | Minimal (name, description only) |
+| `.codex/skills/hs/SKILL.md` | OpenAI Codex | Full (agentskills.io) |
+| `.github/skills/hs/SKILL.md` | GitHub Copilot | Full (agentskills.io) |
+
+The body content is identical across all copies. When updating the skill, edit the canonical `skills/hs/SKILL.md` first, then sync to the other 3. The `.claude/` copy should use reduced YAML frontmatter (only `name` and `description`).
+
 ## Version bump checklist
 
 **All 3 files must be updated together on every release:**
@@ -60,9 +80,9 @@ Dependencies: `pip install -r requirements-dev.txt` (pytest, pytest-cov, pyyaml,
 
 ## CI
 
-GitHub Actions runs tests on push to `main`/`develop` and on PRs to `main`.
-Matrix: Python 3.9-3.12 on ubuntu, windows, macos.
-See `.github/workflows/test.yml`.
+- **test.yml** — runs pytest on push to `main`/`develop` and PRs to `main`. Matrix: Python 3.9-3.12 on ubuntu, windows, macos.
+- **version-check.yml** — validates version sync between `plugin.json` and `marketplace.json` on PRs. Note: does NOT check `package.json` (manual step).
+- **release.yml** — triggers on `v*` tags. Creates GitHub Release with Sigstore build provenance attestation and attaches the npm tarball.
 
 ## Commit conventions
 
@@ -72,13 +92,13 @@ Follow conventional commits:
 - `chore:` for version bumps, maintenance
 - `docs:` for documentation only
 
-## Publishing
+## Release workflow
 
-```bash
-npm publish
-```
-
-Publishes to npm as `hardstop`. Make sure version is bumped in all 3 files first (see checklist above).
+1. Bump version in all 3 files (see checklist above)
+2. Update `CHANGELOG.md`
+3. Commit: `chore: bump vX.Y.Z`
+4. `npm publish`
+5. `git tag vX.Y.Z && git push origin vX.Y.Z` — this triggers `release.yml` which creates the GitHub Release automatically
 
 ## Key design decisions
 
@@ -86,3 +106,15 @@ Publishes to npm as `hardstop`. Make sure version is bumped in all 3 files first
 - **Pattern-based + LLM**: YAML patterns for deterministic checks, LLM skill for awareness
 - **State lives in `~/.hardstop/`**: state.json, skip_next, audit.log (not in repo)
 - **Cross-platform**: hooks are Python, install scripts support bash + PowerShell
+
+## Related files
+
+- `AGENTS.md` — universal agent discovery file (for non-Claude AI agents)
+- `AUDIT.md` — security audit guide for reviewers
+- `SECURITY.md` — security policy and design docs
+- `PRIVACY.md` — privacy policy
+
+## Adding patterns
+
+Pattern YAML files live in `patterns/`. Validated against `patterns/schema.json`.
+After editing patterns, run `pytest tests/test_patterns.py` to verify.
