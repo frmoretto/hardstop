@@ -40,7 +40,7 @@ python "${CLAUDE_PLUGIN_ROOT}/commands/hs_cmd.py" off
 ### If argument is "skip" or "bypass":
 Use `/skip` command instead, or run:
 ```bash
-python "${CLAUDE_PLUGIN_ROOT}/commands/hs_cmd.py" skip
+python "${CLAUDE_PLUGIN_ROOT}/commands/hs_cmd.py" $ARGUMENTS
 ```
 
 ### If argument is "log" or "logs" or "audit":

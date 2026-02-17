@@ -2,6 +2,14 @@
 
 All notable changes to Hardstop will be documented in this file.
 
+## [1.4.4] - 2026-02-17
+
+### Fixed
+- **commands/hs.md**: Pass `$ARGUMENTS` instead of hardcoded `skip` for skip/bypass handler, so `hs bypass` correctly forwards the argument
+- **commands/skip.md**: Forward `$ARGUMENTS` to `hs_cmd.py` so `/skip` passes through any user-supplied arguments
+
+---
+
 ## [1.4.3] - 2026-02-14
 
 ### Growth Features
