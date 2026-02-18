@@ -1,6 +1,6 @@
 {
   "name": "hs",
-  "version": "1.4.5",
+  "version": "1.4.6",
   "description": "Pre-execution safety layer that blocks dangerous shell commands and credential file reads using pattern matching + LLM analysis. Fail-closed design.",
   "author": {
     "name": "Francesco Marinoni Moretto",

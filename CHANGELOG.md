@@ -2,6 +2,13 @@
 
 All notable changes to Hardstop will be documented in this file.
 
+## [1.4.6] - 2026-02-17
+
+### Fixed
+- **hooks/pre_tool_use.py**: Replace `(?:\s+.*)?$` with `(?:[\s\S]+)?$` in git safe patterns so multiline arguments (e.g. heredoc commit messages) are not incorrectly blocked
+
+---
+
 ## [1.4.5] - 2026-02-17
 
 ### Fixed

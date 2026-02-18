@@ -144,8 +144,8 @@ SAFE_PATTERNS = [
 
     # Git standard workflow (recoverable via reflog)
     # Excludes: reset (--hard loses uncommitted work), clean (deletes untracked), rebase --exec (runs shell)
-    r"^git\s+(add|commit|push|pull|fetch|clone|stash|checkout|switch|restore|merge|cherry-pick|branch|tag|init|config|am|apply|bisect|blame|bundle|format-patch|gc|mv|notes|reflog|revert|rm|submodule|worktree)(?:\s+.*)?$",
-    r"^git\s+rebase(?!\s+.*--exec)(?:\s+.*)?$",  # rebase allowed, but not with --exec
+    r"^git\s+(add|commit|push|pull|fetch|clone|stash|checkout|switch|restore|merge|cherry-pick|branch|tag|init|config|am|apply|bisect|blame|bundle|format-patch|gc|mv|notes|reflog|revert|rm|submodule|worktree)(?:[\s\S]+)?$",
+    r"^git\s+rebase(?!\s+.*--exec)(?:[\s\S]+)?$",  # rebase allowed, but not with --exec
     
     # Regeneratable cleanup
     r"^rm\s+(-[^\s]*\s+)*node_modules/?\s*$",
