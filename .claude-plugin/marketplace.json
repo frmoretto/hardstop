@@ -13,7 +13,7 @@
       "name": "hs",
       "source": "./",
       "description": "Pre-execution safety layer that blocks dangerous shell commands and credential file reads using pattern matching + LLM analysis. Fail-closed design.",
-      "version": "1.4.6",
+      "version": "1.4.7",
       "author": {
         "name": "Francesco Marinoni Moretto",
         "email": "contact@clarity-gate.org"

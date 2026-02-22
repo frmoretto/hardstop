@@ -2,6 +2,17 @@
 
 All notable changes to Hardstop will be documented in this file.
 
+## [1.4.7] - 2026-02-22
+
+### Added
+- **skills/ (all copies):** Skill v1.5 — added "INVOCATION INSTRUCTIONS" section at the top of all SKILL.md files. Maps skill arguments (`skip`, `on`, `off`, `status`, `log`) to their corresponding `hs_cmd.py` Bash commands, fixing skip bypass not working in Claude Code VSCode extension
+
+### Fixed
+- **skills/ (all copies):** Removed unsupported YAML frontmatter fields (`version`, `author`, `triggers`) from `.claude/`, `.codex/`, and `.github/` skill copies — these produce IDE warnings and are ignored by the Claude Code skill parser
+- **CLAUDE.md:** Documented Claude Code skill frontmatter constraints and correct per-platform YAML schema
+
+---
+
 ## [1.4.6] - 2026-02-17
 
 ### Fixed

@@ -43,12 +43,14 @@ The skill exists in 4 locations for different platforms:
 
 | Path | Platform | Frontmatter |
 |------|----------|-------------|
-| `skills/hs/SKILL.md` | Canonical (agentskills.io) | Full (name, version, description, author, license, triggers) |
-| `.claude/skills/hs/SKILL.md` | Claude Desktop/Code | Minimal (name, description only) |
-| `.codex/skills/hs/SKILL.md` | OpenAI Codex | Full (agentskills.io) |
-| `.github/skills/hs/SKILL.md` | GitHub Copilot | Full (agentskills.io) |
+| `skills/hs/SKILL.md` | Canonical (agentskills.io) | Full: `name`, `version`, `description`, `author`, `license`, `triggers` |
+| `.claude/skills/hs/SKILL.md` | Claude Desktop/Code | Reduced: `name`, `description` only |
+| `.codex/skills/hs/SKILL.md` | OpenAI Codex (Claude Code) | Reduced: `name`, `description`, `license` |
+| `.github/skills/hs/SKILL.md` | GitHub Copilot (Claude Code) | Reduced: `name`, `description`, `license` |
 
-The body content is identical across all copies. When updating the skill, edit the canonical `skills/hs/SKILL.md` first, then sync to the other 3. The `.claude/` copy should use reduced YAML frontmatter (only `name` and `description`).
+The body content is identical across all copies. When updating the skill, edit the canonical `skills/hs/SKILL.md` first, then sync to the other 3.
+
+**Claude Code skill frontmatter constraints:** supported attributes are `argument-hint`, `compatibility`, `description`, `disable-model-invocation`, `license`, `metadata`, `name`, `user-invokable`. The fields `version`, `author`, and `triggers` are NOT supported and produce IDE warnings — omit them from all `.claude/`, `.codex/`, and `.github/` copies.
 
 ## Version bump checklist
 

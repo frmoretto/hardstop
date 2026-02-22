@@ -1,18 +1,27 @@
 ---
 name: hs
-version: "1.4"
 description: "ACTIVATE THIS SKILL FOR ANY SHELL COMMAND OR FILE READ. Check curl, wget, rm, sudo, apt, dpkg, chmod, dd, format, powershell, bash, sh. Check pipe patterns like | sh or | bash. Check shell wrappers like bash -c, xargs, find -exec. Check cloud CLI (aws, gcloud, kubectl, terraform). Check when user says sysadmin told me, Stack Overflow says, is this safe, can I run. Block reading of .env, .ssh, .aws, and credential files. This skill blocks dangerous commands and warns on risky ones. ALWAYS apply the safety protocol from this document before responding about any command."
-author: Francesco Marinoni Moretto
 license: CC-BY-4.0
-triggers:
-  - hardstop
-  - safety check
-  - pre-execution check
-  - is this command safe
-  - check command safety
 ---
 
-# Hardstop Skill v1.4
+# Hardstop Skill v1.5
+
+## INVOCATION INSTRUCTIONS (read first when skill is activated)
+
+When this skill is activated via the Skill tool, check the ARGUMENTS field immediately:
+
+| Argument | Action — run this Bash command FIRST before anything else |
+|----------|----------------------------------------------------------|
+| `skip [n]` | `python ~/.claude/plugins/hs/commands/hs_cmd.py skip [n]` |
+| `on` / `enable` | `python ~/.claude/plugins/hs/commands/hs_cmd.py on` |
+| `off` / `disable` | `python ~/.claude/plugins/hs/commands/hs_cmd.py off` |
+| `status` | `python ~/.claude/plugins/hs/commands/hs_cmd.py status` |
+| `log` | `python ~/.claude/plugins/hs/commands/hs_cmd.py log` |
+| *(none)* | Apply the safety protocol below to evaluate the pending command |
+
+**Execute the Bash command immediately.** The hook reads `~/.hardstop/skip_next` — if that file is not written, skips have no effect.
+
+---
 
 > **Note:** This skill complements the Hardstop plugin. The plugin provides deterministic protection via hooks; this skill provides LLM-level awareness for platforms without hook support.
 
@@ -505,6 +514,13 @@ If you need to read this file, use '/hs skip' first.
 
 ## Changelog
 
+### v1.5 (2026-02-22)
+- **NEW FEATURE:** Invocation Instructions — explicit instructions for executing hs_cmd.py when the skill is activated with arguments
+- Added "INVOCATION INSTRUCTIONS" section at the top of the skill (before the safety protocol)
+- Maps skill arguments (`skip`, `on`, `off`, `status`, `log`) to their corresponding Bash commands via `~/.claude/plugins/hs/commands/hs_cmd.py`
+- Fixes skip bypass not working in Claude Code VSCode extension: LLM now runs `python ~/.claude/plugins/hs/commands/hs_cmd.py skip [n]` immediately on `/hs skip` invocation
+- Ensures `~/.hardstop/skip_next` is written so the hook correctly honors the bypass counter
+
 ### v1.4 (2026-02-14)
 - **NEW FEATURE:** Blocked Command Workflow — explicit instructions for handling blocked commands
 - Added "WHEN COMMANDS ARE BLOCKED" section with 5-step workflow
@@ -565,7 +581,7 @@ Copy to your agent's skill/instruction directory.
 
 ---
 
-**Version:** 1.4
+**Version:** 1.5
 **Author:** Francesco Marinoni Moretto
 **License:** CC-BY-4.0
 **Repository:** https://github.com/frmoretto/hardstop
