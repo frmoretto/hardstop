@@ -2,6 +2,19 @@
 
 All notable changes to Hardstop will be documented in this file.
 
+## [1.4.8] - 2026-03-02
+
+### Changed
+- **skills/hs/SKILL.md (canonical):** Soften invocation language and add Security Architecture note to address OpenClaw "Suspicious" rating on ClawhHub
+  - Table header: "run this Bash command FIRST" → "Action (user-requested via /hs)"
+  - "Execute the Bash command immediately" → "Run the corresponding command — the user has explicitly requested this action via /hs"
+  - Added Security Architecture blockquote: explains plugin architecture, local scripts (not remote code), credential paths are block targets, skip is user-initiated and scoped
+  - Section 9: clarified that Hardstop blocks reads of credential paths, it does not access them
+  - Skip context: expanded to explain scoped bypass (next N commands, default 1)
+- **Platform copies unchanged** (`.claude/`, `.codex/`, `.github/`): retain original directive language for reliable LLM execution
+
+---
+
 ## [1.4.7] - 2026-02-22
 
 ### Added

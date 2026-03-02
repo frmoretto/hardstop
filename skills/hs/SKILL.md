@@ -18,8 +18,8 @@ triggers:
 
 When this skill is activated via the Skill tool, check the ARGUMENTS field immediately:
 
-| Argument | Action — run this Bash command FIRST before anything else |
-|----------|----------------------------------------------------------|
+| Argument | Action (user-requested via /hs) |
+|----------|----------------------------------|
 | `skip [n]` | `python ~/.claude/plugins/hs/commands/hs_cmd.py skip [n]` |
 | `on` / `enable` | `python ~/.claude/plugins/hs/commands/hs_cmd.py on` |
 | `off` / `disable` | `python ~/.claude/plugins/hs/commands/hs_cmd.py off` |
@@ -27,11 +27,15 @@ When this skill is activated via the Skill tool, check the ARGUMENTS field immed
 | `log` | `python ~/.claude/plugins/hs/commands/hs_cmd.py log` |
 | *(none)* | Apply the safety protocol below to evaluate the pending command |
 
-**Execute the Bash command immediately.** The hook reads `~/.hardstop/skip_next` — if that file is not written, skips have no effect.
+Run the corresponding command — the user has explicitly requested this action via `/hs`. The hook reads `~/.hardstop/skip_next`; if that file is not written, skips have no effect.
 
 ---
 
-> **Note:** This skill complements the Hardstop plugin. The plugin provides deterministic protection via hooks; this skill provides LLM-level awareness for platforms without hook support.
+> **Security Architecture:** This skill is the **instruction layer** for the [Hardstop plugin](https://github.com/frmoretto/hardstop). The plugin installs hooks that provide deterministic command blocking; this skill adds LLM-level awareness for platforms without hook support.
+>
+> - The `hs_cmd.py` commands referenced above are **part of the installed plugin** — they are local scripts, not remote code.
+> - Credential paths (`~/.ssh`, `~/.aws`, `.env`, etc.) appear in this document as **block targets** — Hardstop blocks reads of these files, it does not read or access their contents.
+> - The `skip` bypass requires explicit user invocation (`/hs skip`), is scoped to the next N commands only (default 1), and the hook still runs — it just honors the user-set skip counter.
 
 **Purpose:** Protect users from dangerous AI-initiated actions. The mechanical brake for AI-generated commands.
 
@@ -78,7 +82,7 @@ User: No
 Claude: Good call. What were you trying to do? I can suggest a safer approach.
 ```
 
-**Never bypass safety checks without user permission.**
+**Never bypass safety checks without user permission.** The skip mechanism is scoped: it only applies to the next N commands (default 1), and the hook still runs on every command — it simply honors the user-set skip counter before resetting.
 
 ---
 
@@ -416,7 +420,7 @@ Instead, let me [safer approach].
 
 ## 9. Read Tool Protection (v1.3)
 
-**Hardstop now monitors file reads to prevent secrets exposure.**
+**Hardstop monitors file reads to prevent secrets exposure.** Note: Hardstop **blocks** reads of these paths — it does not read or access their contents.
 
 ### DANGEROUS Reads (Blocked)
 
