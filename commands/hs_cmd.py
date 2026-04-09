@@ -28,7 +28,8 @@ STATE_DIR = Path.home() / ".hardstop"
 STATE_FILE = STATE_DIR / "state.json"
 SKIP_FILE = STATE_DIR / "skip_next"
 LOG_FILE = STATE_DIR / "audit.log"
-PLUGIN_DIR = Path.home() / ".claude" / "plugins" / "hs"
+# Derive plugin dir from installed location: commands/ -> hs/
+PLUGIN_DIR = Path(__file__).absolute().parent.parent
 
 
 def get_version() -> str:

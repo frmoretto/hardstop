@@ -4,9 +4,11 @@
 
 set -e
 
-PLUGIN_DEST="$HOME/.claude/plugins/hs"
-SKILL_DEST="$HOME/.claude/skills/hs"
-SETTINGS_FILE="$HOME/.claude/settings.json"
+CLAUDE_DIR="${CLAUDE_CONFIG_DIR:-$HOME/.claude}"
+CLAUDE_DIR="${CLAUDE_DIR%/}"
+PLUGIN_DEST="$CLAUDE_DIR/plugins/hs"
+SKILL_DEST="$CLAUDE_DIR/skills/hs"
+SETTINGS_FILE="$CLAUDE_DIR/settings.json"
 STATE_DIR="$HOME/.hardstop"
 
 echo "=== Hardstop Uninstaller ==="

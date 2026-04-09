@@ -3,9 +3,10 @@
 
 $ErrorActionPreference = "Stop"
 
-$PluginDest = Join-Path $env:USERPROFILE '.claude\plugins\hs'
-$SkillDest = Join-Path $env:USERPROFILE '.claude\skills\hs'
-$SettingsFile = Join-Path $env:USERPROFILE '.claude\settings.json'
+$ClaudeDir = if ($env:CLAUDE_CONFIG_DIR) { $env:CLAUDE_CONFIG_DIR.TrimEnd('\', '/') } else { Join-Path $env:USERPROFILE '.claude' }
+$PluginDest = Join-Path $ClaudeDir 'plugins\hs'
+$SkillDest = Join-Path $ClaudeDir 'skills\hs'
+$SettingsFile = Join-Path $ClaudeDir 'settings.json'
 $Source = Split-Path -Parent $MyInvocation.MyCommand.Path
 
 Write-Host "=== Hardstop Installer ===" -ForegroundColor Cyan
@@ -25,7 +26,7 @@ if (-not (Test-Path $SkillDest)) {
     New-Item -ItemType Directory -Force -Path $SkillDest | Out-Null
 }
 
-$SkillContent = @'
+$SkillContent = @"
 ---
 name: hs
 version: 1.0.0
@@ -47,14 +48,14 @@ triggers:
 
 **Purpose:** Control the Hardstop pre-execution safety layer that blocks dangerous shell commands.
 
-When the user invokes `/hs` (with optional subcommands), run the appropriate Python command:
+When the user invokes ``/hs`` (with optional subcommands), run the appropriate Python command:
 
-- `/hs` or `/hs status`: `python ~/.claude/plugins/hs/commands/hs_cmd.py status`
-- `/hs on`: `python ~/.claude/plugins/hs/commands/hs_cmd.py on`
-- `/hs off`: `python ~/.claude/plugins/hs/commands/hs_cmd.py off`
-- `/hs skip`: `python ~/.claude/plugins/hs/commands/hs_cmd.py skip`
-- `/hs log`: `python ~/.claude/plugins/hs/commands/hs_cmd.py log`
-'@
+- ``/hs`` or ``/hs status``: ``python $PluginDest/commands/hs_cmd.py status``
+- ``/hs on``: ``python $PluginDest/commands/hs_cmd.py on``
+- ``/hs off``: ``python $PluginDest/commands/hs_cmd.py off``
+- ``/hs skip``: ``python $PluginDest/commands/hs_cmd.py skip``
+- ``/hs log``: ``python $PluginDest/commands/hs_cmd.py log``
+"@
 
 $SkillContent | Out-File -FilePath (Join-Path $SkillDest "SKILL.md") -Encoding utf8
 Write-Host "      Skill created." -ForegroundColor Green
@@ -62,8 +63,7 @@ Write-Host "      Skill created." -ForegroundColor Green
 # Step 3: Add hooks to settings.json
 Write-Host "[3/3] Configuring hooks in: $SettingsFile"
 
-# Ensure .claude directory exists
-$ClaudeDir = Split-Path $SettingsFile
+# Ensure config directory exists
 if (-not (Test-Path $ClaudeDir)) {
     New-Item -ItemType Directory -Force -Path $ClaudeDir | Out-Null
 }
@@ -83,6 +83,7 @@ import json
 import sys
 
 settings_file = sys.argv[1]
+plugin_dest = sys.argv[2]
 
 try:
     with open(settings_file, 'r', encoding='utf-8-sig') as f:
@@ -97,7 +98,7 @@ if 'PreToolUse' not in settings['hooks']:
     settings['hooks']['PreToolUse'] = []
 
 import os
-hook_base = os.path.join(os.path.expanduser('~'), '.claude', 'plugins', 'hs', 'hooks')
+hook_base = os.path.join(plugin_dest, 'hooks')
 bash_hook = os.path.join(hook_base, 'pre_tool_use.py').replace('\\', '/')
 read_hook = os.path.join(hook_base, 'pre_read.py').replace('\\', '/')
 
@@ -123,7 +124,7 @@ settings['hooks']['PreToolUse'].append({
 with open(settings_file, 'w', encoding='utf-8') as f:
     json.dump(settings, f, indent=2)
 "@
-        $pythonScript | python - "$SettingsFile"
+        $pythonScript | python - "$SettingsFile" "$PluginDest"
         if ($LASTEXITCODE -eq 0) {
             Write-Host "      Hooks configured (Bash + Read)." -ForegroundColor Green
         } else {
@@ -138,7 +139,8 @@ import os
 import sys
 
 settings_file = sys.argv[1]
-hook_base = os.path.join(os.path.expanduser('~'), '.claude', 'plugins', 'hs', 'hooks')
+plugin_dest = sys.argv[2]
+hook_base = os.path.join(plugin_dest, 'hooks')
 bash_hook = os.path.join(hook_base, 'pre_tool_use.py').replace('\\', '/')
 read_hook = os.path.join(hook_base, 'pre_read.py').replace('\\', '/')
 
@@ -168,7 +170,7 @@ settings = {
 with open(settings_file, 'w', encoding='utf-8') as f:
     json.dump(settings, f, indent=2)
 "@
-    $pythonScript | python - "$SettingsFile"
+    $pythonScript | python - "$SettingsFile" "$PluginDest"
     if ($LASTEXITCODE -eq 0) {
         Write-Host "      Settings created with hooks (Bash + Read)." -ForegroundColor Green
     } else {

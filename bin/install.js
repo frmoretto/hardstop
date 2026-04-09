@@ -5,7 +5,16 @@ const path = require('path');
 const os = require('os');
 
 const PLUGIN_NAME = 'hs';
-const CLAUDE_DIR = path.join(os.homedir(), '.claude');
+let CLAUDE_DIR = process.env.CLAUDE_CONFIG_DIR || '';
+if (CLAUDE_DIR === '~') {
+  CLAUDE_DIR = os.homedir();
+} else if (CLAUDE_DIR.startsWith('~/')) {
+  CLAUDE_DIR = path.join(os.homedir(), CLAUDE_DIR.slice(2));
+}
+CLAUDE_DIR = CLAUDE_DIR.replace(/\/+$/, '');
+if (!CLAUDE_DIR) {
+  CLAUDE_DIR = path.join(os.homedir(), '.claude');
+}
 const PLUGINS_DIR = path.join(CLAUDE_DIR, 'plugins');
 const PLUGIN_DIR = path.join(PLUGINS_DIR, PLUGIN_NAME);
 const SKILLS_DIR = path.join(CLAUDE_DIR, 'skills');
@@ -108,7 +117,10 @@ function createSkill() {
   const sourceSkill = path.join(sourceDir, 'skills', PLUGIN_NAME, 'SKILL.md');
 
   if (fs.existsSync(sourceSkill)) {
-    fs.copyFileSync(sourceSkill, path.join(SKILL_DIR, 'SKILL.md'));
+    // Replace hardcoded ~/.claude/plugins/hs/ paths with actual install location
+    let content = fs.readFileSync(sourceSkill, 'utf8');
+    content = content.replace(/~\/\.claude\/plugins\/hs\//g, PLUGIN_DIR + '/');
+    fs.writeFileSync(path.join(SKILL_DIR, 'SKILL.md'), content, 'utf8');
   } else {
     // Fallback: generate a minimal skill file
     const skillContent = `---
@@ -132,11 +144,11 @@ triggers:
 
 When the user invokes \`/hs\` (with optional subcommands), run the appropriate Python command:
 
-- \`/hs\` or \`/hs status\`: \`python ~/.claude/plugins/hs/commands/hs_cmd.py status\`
-- \`/hs on\`: \`python ~/.claude/plugins/hs/commands/hs_cmd.py on\`
-- \`/hs off\`: \`python ~/.claude/plugins/hs/commands/hs_cmd.py off\`
-- \`/hs skip\`: \`python ~/.claude/plugins/hs/commands/hs_cmd.py skip\`
-- \`/hs log\`: \`python ~/.claude/plugins/hs/commands/hs_cmd.py log\`
+- \`/hs\` or \`/hs status\`: \`python ${PLUGIN_DIR}/commands/hs_cmd.py status\`
+- \`/hs on\`: \`python ${PLUGIN_DIR}/commands/hs_cmd.py on\`
+- \`/hs off\`: \`python ${PLUGIN_DIR}/commands/hs_cmd.py off\`
+- \`/hs skip\`: \`python ${PLUGIN_DIR}/commands/hs_cmd.py skip\`
+- \`/hs log\`: \`python ${PLUGIN_DIR}/commands/hs_cmd.py log\`
 `;
     fs.writeFileSync(path.join(SKILL_DIR, 'SKILL.md'), skillContent, 'utf8');
   }
@@ -249,7 +261,7 @@ Features:
 
 Documentation:
   • https://github.com/frmoretto/hardstop
-  • ~/.claude/plugins/hs/README.md
+  • ${PLUGIN_DIR}/README.md
 `);
 }
 
@@ -278,7 +290,7 @@ Usage:
   npx hardstop --help     Show this help
 
 Installation:
-  Installs Hardstop to: ~/.claude/plugins/hs
+  Installs Hardstop to: ${CLAUDE_DIR}/plugins/hs
   Requires: Claude Code installed
 
 More info:
