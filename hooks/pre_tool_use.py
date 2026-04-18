@@ -102,14 +102,18 @@ DANGEROUS_PATTERNS = _load_dangerous_patterns()
 
 # Note: Legacy hardcoded patterns removed in v1.4.0 (now in patterns/dangerous_commands.yaml)
 
+# Derive config dir from installed location: hooks/ -> hs/ -> plugins/ -> config dir
+_CLAUDE_DIR = str(Path(__file__).absolute().parent.parent.parent.parent)
+_CLAUDE_DIR_RE = re.escape(_CLAUDE_DIR)
+
 SAFE_PATTERNS = [
     # Hardstop's own operations (must be able to manage itself)
-    r"^python\s+.*[/\\]\.claude[/\\]plugins[/\\]hs[/\\].*\.py(?:\s+.*)?$",
+    rf"^python\s+.*{_CLAUDE_DIR_RE}[/\\]plugins[/\\]hs[/\\].*\.py(?:\s+.*)?$",
     r"^python\s+.*\.hardstop.*$",
     r"^cat\s+.*\.hardstop[/\\].*$",
-    r"^cat\s+.*\.claude[/\\]plugins[/\\]hs[/\\].*$",
+    rf"^cat\s+.*{_CLAUDE_DIR_RE}[/\\]plugins[/\\]hs[/\\].*$",
     r"^rm\s+(-f\s+)?.*\.hardstop[/\\](skip_next|hook_debug\.log)$",
-    r"^grep\s+.*\.claude[/\\]plugins[/\\]hs[/\\].*$",
+    rf"^grep\s+.*{_CLAUDE_DIR_RE}[/\\]plugins[/\\]hs[/\\].*$",
 
     # Read-only operations
     r"^ls(?:\s+.*)?$",

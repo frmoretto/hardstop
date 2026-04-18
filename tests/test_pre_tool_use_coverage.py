@@ -21,10 +21,12 @@ from unittest import TestCase, main as unittest_main
 from unittest.mock import patch, MagicMock
 from io import StringIO
 
-# Add hooks to path
+# Add hooks and commands to path
 sys.path.insert(0, str(Path(__file__).parent.parent / "hooks"))
+sys.path.insert(0, str(Path(__file__).parent.parent / "commands"))
 
 import pre_tool_use
+import hs_cmd
 
 
 class TestBlockCommand(TestCase):
@@ -690,6 +692,102 @@ class TestIsAllSafeEdge(TestCase):
 
     def test_whitespace_only(self):
         self.assertTrue(pre_tool_use.is_all_safe("   "))
+
+
+class TestSafePatternsDeriveFromFile(TestCase):
+    """Test that SAFE_PATTERNS are derived from the script's own location."""
+
+    def test_claude_dir_matches_file_location(self):
+        """_CLAUDE_DIR should be derived from __file__, not an env var."""
+        hooks_dir = Path(pre_tool_use.__file__).absolute().parent
+        plugin_dir = hooks_dir.parent  # hs/
+        expected_claude_dir = str(plugin_dir.parent.parent)  # plugins/ -> config dir
+        self.assertEqual(pre_tool_use._CLAUDE_DIR, expected_claude_dir)
+
+    def test_safe_patterns_match_own_commands(self):
+        """Hardstop's own commands should be whitelisted based on actual location."""
+        claude_dir = pre_tool_use._CLAUDE_DIR
+        self.assertTrue(pre_tool_use.check_safe(f"python {claude_dir}/plugins/hs/hooks/pre_tool_use.py"))
+        self.assertTrue(pre_tool_use.check_safe(f"python {claude_dir}/plugins/hs/commands/hs_cmd.py status"))
+        self.assertTrue(pre_tool_use.check_safe(f"cat {claude_dir}/plugins/hs/README.md"))
+        self.assertTrue(pre_tool_use.check_safe(f"grep pattern {claude_dir}/plugins/hs/hooks/pre_tool_use.py"))
+
+    def test_dynamic_patterns_accept_own_path(self):
+        """Each dynamic pattern should match commands at the actual install path.
+
+        check_safe() can't distinguish which pattern matched (cat/grep have
+        generic patterns that shadow the dynamic ones). Test the dynamic
+        patterns directly to verify they work, not just that check_safe passes.
+        """
+        claude_dir = pre_tool_use._CLAUDE_DIR
+        escaped_dir = pre_tool_use._CLAUDE_DIR_RE
+        dynamic_patterns = [
+            p for p in pre_tool_use.SAFE_PATTERNS
+            if escaped_dir in p
+        ]
+        self.assertEqual(len(dynamic_patterns), 3,
+                         "Expected 3 dynamic patterns (python, cat, grep)")
+        # Each pattern should match at least one command at the actual path
+        own_cmds = [
+            f"python {claude_dir}/plugins/hs/hooks/pre_tool_use.py",
+            f"cat {claude_dir}/plugins/hs/README.md",
+            f"grep pattern {claude_dir}/plugins/hs/hooks/pre_tool_use.py",
+        ]
+        for pattern in dynamic_patterns:
+            matched = any(
+                __import__('re').search(pattern, cmd) for cmd in own_cmds
+            )
+            self.assertTrue(matched,
+                f"Dynamic pattern should match at least one own-path command: {pattern}")
+
+    def test_dynamic_patterns_reject_foreign_path(self):
+        """Each dynamic pattern should reject commands at unrelated paths."""
+        escaped_dir = pre_tool_use._CLAUDE_DIR_RE
+        dynamic_patterns = [
+            p for p in pre_tool_use.SAFE_PATTERNS
+            if escaped_dir in p
+        ]
+        foreign_cmds = [
+            "python /some/other/path/plugins/hs/hooks/pre_tool_use.py",
+            "cat /some/other/path/plugins/hs/README.md",
+            "grep pattern /some/other/path/plugins/hs/hooks/pre_tool_use.py",
+        ]
+        for pattern in dynamic_patterns:
+            for cmd in foreign_cmds:
+                self.assertNotRegex(cmd, pattern,
+                    f"Dynamic pattern should not match foreign path: {cmd}")
+
+    def test_python_at_wrong_path_rejected_by_check_safe(self):
+        """python at a foreign path should be rejected by check_safe().
+
+        Unlike cat/grep which have generic safe patterns that match any
+        non-credential cat or any grep, python has no generic allowlist.
+        So check_safe() is the behavioral test for rejection here.
+        """
+        self.assertFalse(pre_tool_use.check_safe(
+            "python /some/other/path/plugins/hs/hooks/pre_tool_use.py"))
+        self.assertFalse(pre_tool_use.check_safe(
+            "python /some/other/path/plugins/hs/commands/hs_cmd.py status"))
+
+
+class TestHsCmdPluginDir(TestCase):
+    """Test that hs_cmd.py derives PLUGIN_DIR from __file__."""
+
+    def test_plugin_dir_matches_file_location(self):
+        """PLUGIN_DIR should point to the plugin root (parent of commands/)."""
+        expected = Path(hs_cmd.__file__).absolute().parent.parent
+        self.assertEqual(hs_cmd.PLUGIN_DIR, expected)
+
+    def test_plugin_json_found(self):
+        """get_version() should find plugin.json via the derived PLUGIN_DIR."""
+        version = hs_cmd.get_version()
+        # When running from the repo, .claude-plugin/plugin.json exists
+        plugin_json = hs_cmd.PLUGIN_DIR / ".claude-plugin" / "plugin.json"
+        if plugin_json.exists():
+            self.assertNotEqual(version, "unknown")
+        else:
+            # Installed layout may differ; just verify it doesn't crash
+            self.assertIsInstance(version, str)
 
 
 class TestSaveStateError(TestCase):

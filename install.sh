@@ -4,9 +4,11 @@
 
 set -e
 
-PLUGIN_DEST="$HOME/.claude/plugins/hs"
-SKILL_DEST="$HOME/.claude/skills/hs"
-SETTINGS_FILE="$HOME/.claude/settings.json"
+CLAUDE_DIR="${CLAUDE_CONFIG_DIR:-$HOME/.claude}"
+CLAUDE_DIR="${CLAUDE_DIR%/}"
+PLUGIN_DEST="$CLAUDE_DIR/plugins/hs"
+SKILL_DEST="$CLAUDE_DIR/skills/hs"
+SETTINGS_FILE="$CLAUDE_DIR/settings.json"
 SOURCE="$(cd "$(dirname "$0")" && pwd)"
 
 echo "=== Hardstop Installer ==="
@@ -21,7 +23,7 @@ echo "      Plugin installed."
 # Step 2: Create skill
 echo "[2/3] Creating skill at: $SKILL_DEST"
 mkdir -p "$SKILL_DEST"
-cat > "$SKILL_DEST/SKILL.md" << 'EOF'
+cat > "$SKILL_DEST/SKILL.md" << EOF
 ---
 name: hs
 version: 1.0.0
@@ -43,13 +45,13 @@ triggers:
 
 **Purpose:** Control the Hardstop pre-execution safety layer that blocks dangerous shell commands.
 
-When the user invokes `/hs` (with optional subcommands), run the appropriate Python command:
+When the user invokes \`/hs\` (with optional subcommands), run the appropriate Python command:
 
-- `/hs` or `/hs status`: `python ~/.claude/plugins/hs/commands/hs_cmd.py status`
-- `/hs on`: `python ~/.claude/plugins/hs/commands/hs_cmd.py on`
-- `/hs off`: `python ~/.claude/plugins/hs/commands/hs_cmd.py off`
-- `/hs skip`: `python ~/.claude/plugins/hs/commands/hs_cmd.py skip`
-- `/hs log`: `python ~/.claude/plugins/hs/commands/hs_cmd.py log`
+- \`/hs\` or \`/hs status\`: \`python $PLUGIN_DEST/commands/hs_cmd.py status\`
+- \`/hs on\`: \`python $PLUGIN_DEST/commands/hs_cmd.py on\`
+- \`/hs off\`: \`python $PLUGIN_DEST/commands/hs_cmd.py off\`
+- \`/hs skip\`: \`python $PLUGIN_DEST/commands/hs_cmd.py skip\`
+- \`/hs log\`: \`python $PLUGIN_DEST/commands/hs_cmd.py log\`
 EOF
 echo "      Skill created."
 
@@ -77,12 +79,12 @@ if 'PreToolUse' not in settings['hooks']:
 # Add Bash hook
 settings['hooks']['PreToolUse'].append({
     'matcher': 'Bash',
-    'hooks': [{'type': 'command', 'command': 'python ~/.claude/plugins/hs/hooks/pre_tool_use.py', 'timeout': 30}]
+    'hooks': [{'type': 'command', 'command': 'python $PLUGIN_DEST/hooks/pre_tool_use.py', 'timeout': 30}]
 })
 # Add Read hook (v1.3 - secrets protection)
 settings['hooks']['PreToolUse'].append({
     'matcher': 'Read',
-    'hooks': [{'type': 'command', 'command': 'python ~/.claude/plugins/hs/hooks/pre_read.py', 'timeout': 30}]
+    'hooks': [{'type': 'command', 'command': 'python $PLUGIN_DEST/hooks/pre_read.py', 'timeout': 30}]
 })
 with open(settings_file, 'w') as f:
     json.dump(settings, f, indent=2)
@@ -93,7 +95,7 @@ with open(settings_file, 'w') as f:
         fi
     fi
 else
-    cat > "$SETTINGS_FILE" << 'EOF'
+    cat > "$SETTINGS_FILE" << EOF
 {
   "hooks": {
     "PreToolUse": [
@@ -102,7 +104,7 @@ else
         "hooks": [
           {
             "type": "command",
-            "command": "python ~/.claude/plugins/hs/hooks/pre_tool_use.py",
+            "command": "python $PLUGIN_DEST/hooks/pre_tool_use.py",
             "timeout": 30
           }
         ]
@@ -112,7 +114,7 @@ else
         "hooks": [
           {
             "type": "command",
-            "command": "python ~/.claude/plugins/hs/hooks/pre_read.py",
+            "command": "python $PLUGIN_DEST/hooks/pre_read.py",
             "timeout": 30
           }
         ]
