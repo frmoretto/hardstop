@@ -2,6 +2,19 @@
 
 All notable changes to Hardstop will be documented in this file.
 
+## [1.4.9] - 2026-04-18
+
+### Added
+- **Installers + runtime:** Respect `CLAUDE_CONFIG_DIR` env var across `bin/install.js`, `install.sh`, `install.ps1`, `uninstall.sh` (resolved at install time) and `hooks/pre_tool_use.py`, `commands/hs_cmd.py` (derived from `__file__` at runtime). 7 new tests cover path derivation and dynamic safe-pattern matching. Thanks to @moiri-gamboni in #4.
+
+### Fixed
+- **uninstall.ps1:** Apply `CLAUDE_CONFIG_DIR` resolution for parity with `uninstall.sh`; previously left files behind on Windows when installed under a custom config directory.
+
+### Changed
+- **Platform skill copies (`.claude/`, `.codex/`, `.github/`):** Add a path-note clarifying that `~/.claude/...` paths in invocation tables assume the default install location.
+
+---
+
 ## [1.4.8] - 2026-03-02
 
 ### Changed

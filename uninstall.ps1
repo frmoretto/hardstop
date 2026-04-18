@@ -3,9 +3,10 @@
 
 $ErrorActionPreference = "Stop"
 
-$PluginDest = Join-Path $env:USERPROFILE '.claude\plugins\hs'
-$SkillDest = Join-Path $env:USERPROFILE '.claude\skills\hs'
-$SettingsFile = Join-Path $env:USERPROFILE '.claude\settings.json'
+$ClaudeDir = if ($env:CLAUDE_CONFIG_DIR) { $env:CLAUDE_CONFIG_DIR.TrimEnd('\', '/') } else { Join-Path $env:USERPROFILE '.claude' }
+$PluginDest = Join-Path $ClaudeDir 'plugins\hs'
+$SkillDest = Join-Path $ClaudeDir 'skills\hs'
+$SettingsFile = Join-Path $ClaudeDir 'settings.json'
 $StateDir = Join-Path $env:USERPROFILE '.hardstop'
 
 Write-Host "=== Hardstop Uninstaller ===" -ForegroundColor Cyan

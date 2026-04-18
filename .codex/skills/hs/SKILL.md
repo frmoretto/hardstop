@@ -21,6 +21,8 @@ When this skill is activated via the Skill tool, check the ARGUMENTS field immed
 
 **Execute the Bash command immediately.** The hook reads `~/.hardstop/skip_next` — if that file is not written, skips have no effect.
 
+> **Path note:** Commands above assume the default install location. If Hardstop was installed with `CLAUDE_CONFIG_DIR` set, replace `~/.claude` in the paths with that directory.
+
 ---
 
 > **Note:** This skill complements the Hardstop plugin. The plugin provides deterministic protection via hooks; this skill provides LLM-level awareness for platforms without hook support.
